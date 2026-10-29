@@ -18,4 +18,6 @@ public interface repositoryAdministrador extends JpaRepository<entityAdministrad
 
     List<entityAdministrador> findByNomeContainingIgnoreCase(String nome); // faz a mesma coisa com o nome mas ignorando maiuscula e minuscula
 
+    Optional<entityAdministrador> findByEmail(String email); // aqui busca o registro completo do administrador pelo email para o login
+
 }
