@@ -49,7 +49,7 @@ public class controllerBotao {
     // 2. Read Consultar todas os botoes - Rota Protegida
     @GetMapping
     @SecurityRequirement(name="BearerAuth")
-    @Operation(summary = "Listar Todos", description = "Retorna uma lista de todos os botões cadastrados (Requer Token).")
+    @Operation(summary = "Listar Todos os botões", description = "Retorna uma lista de todos os botões cadastrados (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
     public ResponseEntity<List<entityBotao>> listarTodos() {
 
