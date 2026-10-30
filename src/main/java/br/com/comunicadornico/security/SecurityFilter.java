@@ -1,17 +1,17 @@
 package br.com.comunicadornico.security;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import br.com.comunicadornico.repository.repositoryAdministrador;
-
-
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -22,27 +22,32 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Autowired
     private repositoryAdministrador repository;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+   @Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    try {
         String token = recuperarToken(request);
+        System.out.println("🔍 Token intercetado no cabeçalho: " + token);
 
         if (token != null) {
             String email = jwtService.extrairEmailDoToken(token);
+            System.out.println("✅ E-mail extraído do token: " + email);
             
-            // Busca o administrador na base de dados
             var administrador = repository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Administrador não encontrado"));
 
-            // Cria a autenticação 
-            var authentication = new UsernamePasswordAuthenticationToken(administrador, null, null);
+            //
+            var authentication = new UsernamePasswordAuthenticationToken(administrador, null, new java.util.ArrayList<>());
             
-            // Regista o administrador como logado nesta requisição
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            System.out.println("🔓 Autenticação injetada no contexto com sucesso!");
         }
-
-        // Continua o fluxo da requisição
-        filterChain.doFilter(request, response);
+    } catch (Exception e) {
+        System.out.println("❌ ERRO no Filtro JWT: " + e.getMessage());
+        e.printStackTrace();
     }
+
+    filterChain.doFilter(request, response);
+}
 
     private String recuperarToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
