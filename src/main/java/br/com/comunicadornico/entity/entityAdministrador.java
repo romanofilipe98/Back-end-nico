@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,63 +20,77 @@ import jakarta.persistence.Table;
 //criando tabela
 @Entity
 @Table(name = "tb_administrador")
+@Schema(description = "Entidade que representa um Administrador do sistema")
 public class entityAdministrador {
 
     //criando chave primária
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
+    @Schema(description = "ID único do administrador gerado automaticamente", example = "1")
     private Long idAdministrador;
 
     //variaveis(colunas na tabela)
     @Column(name = "nome", nullable = false)
+    @Schema(description = "Nome completo do administrador", example = "João da Silva")
     private String nome;
 
     @Column(name = "email", nullable = false, unique = true)
+    @Schema(description = "Endereço de e-mail (deve ser único)", example = "joao.silva@email.com")
     private String email;
 
     @Column(name = "pin", nullable = false)
+    @Schema(description = "PIN de segurança numérico", example = "1234")
     private int pin;
 
     @Column(name = "telefone", nullable = false, unique = true)
+    @Schema(description = "Telefone de contato com DDD", example = "11988887777")
     private String telefone;
 
     @Column(name = "dataNasc", nullable = false)
+    @Schema(description = "Data de nascimento no padrão YYYY-MM-DD", example = "1990-05-15")
     private LocalDate dataNasc;
 
     @Column(name = "sexo", nullable = false)
+    @Schema(description = "Sexo do administrador", example = "Masculino")
     private String sexo;
 
     @Column(name = "senha", nullable = false)
+    @Schema(description = "Senha de acesso (ficará criptografada no banco)", example = "SenhaForte123", accessMode = Schema.AccessMode.WRITE_ONLY)
     private String senha;
 
     @Column(name = "premium")
+    @Schema(description = "Status da assinatura do administrador", example = "true")
     private boolean premium;
 
     @Column(name = "valorMensalidade")
+    @Schema(description = "Valor cobrado pela mensalidade", example = "29.90")
     private float valorMensalidade;
 
-    // CORRIGIDO: antes estava com o mesmo nome "valorMensalidade" (coluna repetida causava erro no Hibernate)
     @Column(name = "dataAssinatura")
+    @Schema(description = "Data de início da assinatura", example = "2023-10-01")
     private LocalDate dataAssinatura;
 
     // relacionamento das tabelas
     //criando relação biderecional administrador x usuário (1..*)
     @OneToMany(mappedBy = "administrador")// informa que a classe que irá guardar a chave estrangeira de relação é a calsse Usuario
     @JsonIgnoreProperties("administrador") //resolvendo recursão infinita
+    @Schema(hidden = true)
     private List<entityUsuario> usuarios; //cria o objeto usuário para armazenar
 
     //criando relação biderecional administrador x  botao (1..*)
     @OneToMany(mappedBy = "administrador")
     @JsonIgnore
+    @Schema(hidden = true)
     private List<entityBotao> botoes;
 
     //criando relaçao bideracional administrador x categoria (1..*)
     @OneToMany(mappedBy = "administrador")
+    @Schema(hidden = true)
     private List<entityCategoria> categorias;
 
     //criando relaçao  administrador x BackUpManager (1..1)
     @OneToOne(mappedBy = "administrador")
+    @Schema(hidden = true)
     private entityBackUpManager backUpManager;
 
     //getters, setters e construtores

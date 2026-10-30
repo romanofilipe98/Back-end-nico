@@ -3,6 +3,7 @@ package br.com.comunicadornico.entity;
 
 import java.util.List; //import para usar a lista
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,61 +16,75 @@ import jakarta.persistence.Table;
 
 @Entity  //informa o SpringBot que essa classe deve virar uma tabela real
 @Table(name = "tb_botao") // Etiqueta de identificação
-
+@Schema(description = "Entidade que representa um botão de comunicação do sistema")
 public class entityBotao {
 
     @Id //criação da chave primaria id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // ativa o autoincremento 
+    @Schema(description = "ID único do botão", example = "1")
     private Long idBotao;
 
     // Colunas
     @Column(name = "legenda")
+    @Schema(description = "Texto exibido abaixo do botão", example = "Quero água")
     private String legenda;
 
     @Column(name = "corFundo")
+    @Schema(description = "Código hexadecimal ou nome da cor de fundo do botão", example = "#FFFFFF")
     private String corFundo;
 
     @Column(name = "foto")
+    @Schema(description = "URL, caminho ou Base64 da imagem associada ao botão", example = "https://exemplo.com/agua.png")
     private String foto;
 
     @Column(name = "audioPersonalizado")
+    @Schema(description = "Caminho para o arquivo de áudio gravado pelo usuário", example = "/audios/personalizado_agua.mp3")
     private String audioPersonalizado;
 
     @Column(name = "audioFem")
+    @Schema(description = "Caminho para o arquivo de áudio gerado com voz feminina", example = "/audios/fem_agua.mp3")
     private String audioFem;
 
     @Column(name = "audioMas")
+    @Schema(description = "Caminho para o arquivo de áudio gerado com voz masculina", example = "/audios/masc_agua.mp3")
     private String audioMas;
 
     @Column(name = "tamanhoBotao")
+    @Schema(description = "Define a escala ou tamanho renderizado do botão", example = "2")
     private int tamanhoBotao;
 
     @Column(name = "oculto")
+    @Schema(description = "Sinalizador se o botão está invisível para o usuário final", example = "false")
     private boolean oculto;
 
     // CORRIGIDO: a relação botão x categoria agora usa a tabela associativa (entityBotaoCategoria)
     // em vez do @ManyToMany automático. O botão conhece suas ligações com as categorias.
     @OneToMany(mappedBy = "botao")
+    @Schema(hidden = true)
     private List<entityBotaoCategoria> botaoCategorias;
 
     // criando relação da tabela botão com registro de atividade
     // isso é uma relação biderecional, ou seja, registro sabe a qual botão ela está associada
     @OneToMany(mappedBy = "botao") // botão é o nome da variavel criada na classe registro
+    @Schema(hidden = true)
     private List<entityRegistroDeAtividade> registroDeAtividade;
 
     // relação de botão x administrador (*..1)
     @ManyToOne
     @JoinColumn(name = "fkAdministrador")
+    @Schema(hidden = true)
     private entityAdministrador administrador;
 
     // relação de botão x usuario (*..1)
     @ManyToOne
     @JoinColumn(name = "fkUsuario")
+    @Schema(hidden = true)
     private entityUsuario usuario;
 
     //relação de botão x tiradesetença (*..1)
     @ManyToOne
     @JoinColumn(name = "fkTiraDeSentenca")
+    @Schema(hidden = true)
     private entityTiraDeSentenca tiraDeSentenca;
 
     // ADICIONADO: construtor padrao (exigido pelo JPA)

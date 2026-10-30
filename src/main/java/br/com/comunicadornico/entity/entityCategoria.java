@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,22 +19,26 @@ import jakarta.persistence.Table;
 //criando a tabela
 @Entity
 @Table(name = "tb_categoria")
-
+@Schema(description = "Entidade que representa uma categoria de botões no sistema")
 public class entityCategoria {
 
     //cria a chave primaria
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "ID único da categoria", example = "1")
     private Long idCategoria;
 
     //criando as variaveis
     @Column(name = "nome", nullable = false) //avisa o banco de dados que essa coluna não pode ficar vazia
+    @Schema(description = "Nome da categoria", example = "Emoções")
     private String nome;
 
     @Column(name = "fotoCat")
+    @Schema(description = "Guarda o caminho da foto de capa da categoria", example = "https://exemplo.com/emocoes.png")
     private String fotoCat;
 
     @Column(name = "posicaoCat")
+    @Schema(description = "Posição da categoria no carrosel", example = "1")
     private int posicaoCat;
 
     // criando as relaçoes
@@ -46,10 +51,12 @@ public class entityCategoria {
     // relaçao categoria x usuario (*..1)
     @ManyToOne
     @JoinColumn(name = "fkUsuario")
+    @Schema(hidden = true)
     private entityUsuario usuario;
 
     // ADICIONADO: relação categoria x botão pela tabela associativa (entityBotaoCategoria)
     @OneToMany(mappedBy = "categoria")
+    @Schema(hidden = true)
     private List<entityBotaoCategoria> botaoCategorias;
 
     // construtor padrao (exigido pelo JPA)

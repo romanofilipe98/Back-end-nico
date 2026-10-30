@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,28 +21,34 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_usuario")
-
+@Schema(description = "Entidade que representa um usuário cadastrado no sistema")
 public class entityUsuario {
 
     // criando a chave primaria
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "ID único do usuaário", example = "1")
     private Long idUsuario;
 
     // colunas
     @Column(name= "nome", nullable = false)
+    @Schema(description = "Nome do usuário", example = "Juao de Magalhães")
     private String nome;
 
     @Column(name= "sexo")
+    @Schema(description = "Sexo do usuário", example = "Masculino")
     private String sexo;
 
     @Column(name= "nivelAutismo")
+    @Schema(description = "Nivel de autismo do usuário", example = "Nivel 3")
     private String nivelAutismo;
 
     @Column(name= "dataNascAut", nullable = false)
+    @Schema(description = "Data de nascimento no padrão YYYY-MM-DD", example = "1990-05-15")
     private LocalDate dataNascAut;
 
     @Column(name= "voz")
+    @Schema(description = "Tipo de voz do sintetizador true(Masculino) false(Feminino)", example = "true")
     private boolean voz;
     
     // criando os relacionamentos da tabela
@@ -49,22 +56,27 @@ public class entityUsuario {
     @ManyToOne
     @JsonIgnoreProperties("usuarios") // resolvendo erro de recursao
     @JoinColumn(name = "fkAdministrador") // criando a coluna que irá armazenar a chave estrangeira
+    @Schema(hidden = true)
     private entityAdministrador administrador; // cria o objeto administrador que será armazenado
 
     //relacionamento bidirecional de usuário x registrodeatividade (1...*)
     @OneToMany(mappedBy = "usuario")
+    @Schema(hidden = true)
     private List<entityRegistroDeAtividade> registros;
 
     //relaciomaneto bideracional de usuário x categoria (1..*)
     @OneToMany(mappedBy = "usuario")
+    @Schema(hidden = true)
     private List<entityCategoria> categorias;
 
     // relaciomaneto bideracional de usuário x botão (1..*)
     @OneToMany(mappedBy = "usuario")
+    @Schema(hidden = true)
     private List<entityBotao> botoes;
 
     //relacionamento usuario x tira de setença (1..1)
     @OneToOne(mappedBy = "usuario")
+    @Schema(hidden = true)
     private entityTiraDeSentenca tiraDeSentenca;
 
     // Construtor padrão (exigido pelo JPA)
