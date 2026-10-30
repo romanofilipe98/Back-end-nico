@@ -4,6 +4,8 @@ package br.com.comunicadornico.entity;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -45,6 +47,7 @@ public class entityUsuario {
     // criando os relacionamentos da tabela
     // relacioamento bidirecional de usuárioxadministrador (*..1)
     @ManyToOne
+    @JsonIgnoreProperties("usuarios") // resolvendo erro de recursao
     @JoinColumn(name = "fkAdministrador") // criando a coluna que irá armazenar a chave estrangeira
     private entityAdministrador administrador; // cria o objeto administrador que será armazenado
 

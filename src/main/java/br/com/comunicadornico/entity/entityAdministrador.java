@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,7 +61,8 @@ public class entityAdministrador {
 
     // relacionamento das tabelas
     //criando relação biderecional administrador x usuário (1..*)
-    @OneToMany(mappedBy = "administrador") // informa que a classe que irá guardar a chave estrangeira de relação é a calsse Usuario
+    @OneToMany(mappedBy = "administrador")// informa que a classe que irá guardar a chave estrangeira de relação é a calsse Usuario
+    @JsonIgnoreProperties("administrador") //resolvendo recursão infinita
     private List<entityUsuario> usuarios; //cria o objeto usuário para armazenar
 
     //criando relação biderecional administrador x  botao (1..*)
