@@ -76,12 +76,11 @@ public class controllerCategoria {
         @ApiResponse(responseCode = "200", description = "Categoria encontrada"),
         @ApiResponse(responseCode = "404", description = "Categoria não encontrado")
     })
-    public ResponseEntity<entityCategoria> buscarCategoriaPorId(@RequestParam Long idCategoria) {
+     public ResponseEntity<entityCategoria> buscarCategoriaPorId(@PathVariable Long idCategoria) {
 
         entityCategoria categoriaEncontrada = meuService.pesquisarCategoriaPorId(idCategoria);
 
         return ResponseEntity.ok(categoriaEncontrada);
-
     }
     
     //4. UPTADE - Atualizar um registro existente (PUT) - Rota Protegida
