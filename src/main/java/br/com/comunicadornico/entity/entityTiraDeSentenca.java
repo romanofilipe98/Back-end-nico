@@ -3,6 +3,7 @@ package br.com.comunicadornico.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -16,18 +17,16 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-//criando tabela
-//anotacoes
 
 @Entity
 @Table(name = "tb_tiradesentenca")
-
-
+@Schema(description = "Entidade que representa a tira de sentença do comunicador (frase montada pelo usuário)")
 public class entityTiraDeSentenca {
 
     // criar chave primaria
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "ID único da tira de sentença", example = "1")
     private Long idTiraDeSentenca;
 
     // variaveis
@@ -38,29 +37,33 @@ public class entityTiraDeSentenca {
     @CollectionTable(name = "tb_tiradesentenca_sequencia", joinColumns = @JoinColumn(name = "fkTiraDeSentenca"))
     @OrderColumn(name = "posicao")
     @Column(name= "idBotao")
+    @Schema(description = "Lista ordenada com os IDs dos botões que formam a frase", example = "[1, 5, 12]")
     private List<Integer> sequenciaBotoes = new ArrayList<>();
 
     @Column(name= "textoFormatado")
+    @Schema(description = "Texto completo gerado pela junção das legendas dos botões", example = "Eu quero beber água")
     private String textoFormatado;
 
-    //a sugestão por IA não será usada nesta etapa.
+    // a sugestão por IA não será usada nesta etapa.
     // @Transient faz o JPA ignorar este atributo (não vira coluna no banco),
     // mas ele continua existindo na classe, como no diagrama.
     @Transient
+    @Schema(description = "Lista temporária com IDs de botões sugeridos para a próxima palavra (não é salvo no banco)", example = "[3, 8]")
     private List<Integer> sugestao = new ArrayList<>();
 
-
-    //criando relacionamento das tabelas
-    //relação tira x usuario (1..1)
+    // criando relacionamento das tabelas
+    // relação tira x usuario (1..1)
     @OneToOne
     @JoinColumn(name = "fkUsuario")
+    @Schema(hidden = true)
     private entityUsuario usuario;
 
-    //relação tira x botão
+    // relação tira x botão
     @OneToMany(mappedBy = "tiraDeSentenca")
+    @Schema(hidden = true)
     private List<entityBotao> botoes;
 
-     // construtor padrão (exigido pelo JPA)
+    // construtor padrão (exigido pelo JPA)
     public entityTiraDeSentenca() {
         this.sequenciaBotoes = new ArrayList<>();
         this.sugestao = new ArrayList<>();

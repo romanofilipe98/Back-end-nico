@@ -1,7 +1,9 @@
 package br.com.comunicadornico.service;
 
 import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,9 @@ import br.com.comunicadornico.repository.repositoryAdministrador;
 public class serviceAdministrador {
 
     private final repositoryAdministrador repositoryAdministrador;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public serviceAdministrador(repositoryAdministrador repositoryAdministrador) {
@@ -32,13 +37,14 @@ public class serviceAdministrador {
         if (novoAdministrador.getPin() < 1000 || novoAdministrador.getPin() > 9999) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O PIN deve ter 4 dígitos.");
         }
-        // email e telefone são unique no banco: avisamos antes de estourar erro do banco
         if (repositoryAdministrador.existsByEmail(novoAdministrador.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado.");
         }
         if (repositoryAdministrador.existsByTelefone(novoAdministrador.getTelefone())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Telefone já cadastrado.");
         }
+        String senhaCriptografada = passwordEncoder.encode(novoAdministrador.getSenha());
+        novoAdministrador.setSenha(senhaCriptografada);
         return repositoryAdministrador.save(novoAdministrador);
     }
 

@@ -1,5 +1,6 @@
 package br.com.comunicadornico.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,15 +15,18 @@ import jakarta.persistence.Table;
 // o que permite guardar dados da ligação, como a posição do botão dentro de cada categoria.
 @Entity
 @Table(name = "tb_botao_categoria")
+@Schema(description = "Entidade que representa a relação *..* de botão e categoria")
 
 public class entityBotaoCategoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "ID único do botão-categoria", example = "1")
     private Long idBotaoCategoria;
 
     // posição do botão dentro desta categoria
     @Column(name= "posicao")
+    @Schema(description = "posição do botão dentro da categoria", example = "1")
     private int posicao;
 
     // relação botaoCategoria x botão (*..1)
