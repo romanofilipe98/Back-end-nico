@@ -17,6 +17,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+
 //criando tabela
 @Entity
 @Table(name = "tb_administrador")
