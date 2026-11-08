@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,7 @@ public class controllerUsuario {
     @Autowired
     private serviceUsuario meuService;
 
-    // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
+ // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
     @PostMapping //informa que o post dessa classe deve passar por aqui, é uma etiqueta de anotação
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Criar novo usuario", description = "Registra um novo Usuário no banco de dados (Requer Token).")
@@ -39,8 +40,15 @@ public class controllerUsuario {
         @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados")
     }) 
-    public ResponseEntity<entityUsuario> criarUsuario(@RequestBody entityUsuario novoUsuario) {
-        entityUsuario usuarioCriado = meuService.criarUsuario(novoUsuario);
+    public ResponseEntity<entityUsuario> criarUsuario(
+            @RequestBody entityUsuario novoUsuario,
+            Authentication authentication // O Spring injeta a identidade do JWT aqui
+    ) {
+        // Extrai o e-mail (ou username) de quem fez a requisição
+        String emailAdminLogado = authentication.getName();
+
+        // Passa o objeto e o e-mail para a Service
+        entityUsuario usuarioCriado = meuService.criarUsuario(novoUsuario, emailAdminLogado);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCriado);
     }

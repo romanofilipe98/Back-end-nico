@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.entity.entityUsuario;
+import br.com.comunicadornico.repository.repositoryAdministrador;
 import br.com.comunicadornico.repository.repositoryUsuario;
 
 @Service
@@ -20,14 +22,24 @@ public class serviceUsuario {
         this.repositoryUsuario = repositoryUsuario;
     }
 
+    @Autowired
+    private repositoryAdministrador repositoryAdministrador;
+
     // CREATE
-    public entityUsuario criarUsuario(entityUsuario novoUsuario) {
+    public entityUsuario criarUsuario(entityUsuario novoUsuario, String emailAdminLogado) {
         if (novoUsuario.getNome() == null || novoUsuario.getNome().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O nome do usuário é obrigatório.");
         }
         if (novoUsuario.getDataNascAut() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A data de nascimento é obrigatória.");
         }
+
+        entityAdministrador administrador = repositoryAdministrador.findByEmail(emailAdminLogado)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Administrador autenticado não encontrado."));
+
+
+        novoUsuario.setAdministrador(administrador);
+
         return repositoryUsuario.save(novoUsuario);
     }
 
