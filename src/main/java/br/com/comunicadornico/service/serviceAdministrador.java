@@ -1,11 +1,10 @@
 package br.com.comunicadornico.service;
 
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,6 +31,9 @@ public class serviceAdministrador {
         }
         if (novoAdministrador.getEmail() == null || novoAdministrador.getEmail().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O e-mail é obrigatório.");
+        }
+        if (novoAdministrador.getSenha() == null || novoAdministrador.getSenha().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha é obrigatória.");
         }
         // RNF011 - PIN numérico de 4 dígitos
         if (novoAdministrador.getPin() < 1000 || novoAdministrador.getPin() > 9999) {
@@ -75,7 +77,12 @@ public class serviceAdministrador {
         administrador.setTelefone(administradorAtualizado.getTelefone());
         administrador.setDataNasc(administradorAtualizado.getDataNasc());
         administrador.setSexo(administradorAtualizado.getSexo());
-        administrador.setSenha(administradorAtualizado.getSenha());
+
+        // só troca a senha se uma nova for enviada, e sempre criptografada
+        if (administradorAtualizado.getSenha() != null && !administradorAtualizado.getSenha().isBlank()) {
+            administrador.setSenha(passwordEncoder.encode(administradorAtualizado.getSenha()));
+        }
+
         administrador.setPremium(administradorAtualizado.isPremium());
         administrador.setValorMensalidade(administradorAtualizado.getValorMensalidade());
         administrador.setDataAssinatura(administradorAtualizado.getDataAssinatura());

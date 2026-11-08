@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.entity.entityUsuario;
+import br.com.comunicadornico.repository.repositoryAdministrador;
+import br.com.comunicadornico.repository.repositoryUsuario;
 import br.com.comunicadornico.service.serviceUsuario;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,11 +31,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController //avisa o spring que a classe vai responder a requisitos da web
 @RequestMapping("/api/usuarios") //define o endereço base Url
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @Tag(name = "Usuários", description = "Endpoints para gestão, cadastro e consulta de Usuarios")
 public class controllerUsuario {
 
     @Autowired
     private serviceUsuario meuService;
+    @Autowired
+    private repositoryAdministrador administradorRepository;
+
+    @Autowired
+    private repositoryUsuario usuarioRepository;
 
     // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
     @PostMapping //informa que o post dessa classe deve passar por aqui, é uma etiqueta de anotação
@@ -38,16 +50,23 @@ public class controllerUsuario {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados")
-    }) 
-    public ResponseEntity<entityUsuario> criarUsuario(@RequestBody entityUsuario novoUsuario) {
-        entityUsuario usuarioCriado = meuService.criarUsuario(novoUsuario);
+    })
+    public ResponseEntity<entityUsuario> criarUsuario(
+            @RequestBody entityUsuario novoUsuario,
+            Authentication authentication // O Spring injeta a identidade do JWT aqui
+    ) {
+        // Extrai o e-mail (ou username) de quem fez a requisição
+        String emailAdminLogado = authentication.getName();
+
+        // Passa o objeto e o e-mail para a Service
+        entityUsuario usuarioCriado = meuService.criarUsuario(novoUsuario, emailAdminLogado);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCriado);
     }
 
     // 2. Read Consultar todos os registros - Rota Protegida
     @GetMapping
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Listar todos os usuários", description = "Retorna uma lista de todos os usuários cadastrados (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Usuários retornados com sucesso")
     public ResponseEntity<List<entityUsuario>> listarTodos() {
@@ -68,7 +87,7 @@ public class controllerUsuario {
 
     // READ - Consultar por ID
     @GetMapping("/{idUsuario}")
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Buscar usuário por ID", description = "Retorna os dados de um usuário específico pelo seu ID (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
@@ -102,6 +121,21 @@ public class controllerUsuario {
 
         meuService.excluirUsuario(idUsuario);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/meus-usuarios")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "Listar meus usuários", description = "Retorna os usuários vinculados ao administrador logado.")
+    public ResponseEntity<List<entityUsuario>> listarMeusUsuarios(Authentication authentication) {
+
+        // Pega o email do administrador pelo token
+        String emailAdminLogado = authentication.getName();
+        entityAdministrador admin = administradorRepository.findByEmail(emailAdminLogado)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado!"));
+
+        List<entityUsuario> meusUsuarios = usuarioRepository.findByAdministrador(admin);
+
+        return ResponseEntity.ok(meusUsuarios);
     }
 
 }

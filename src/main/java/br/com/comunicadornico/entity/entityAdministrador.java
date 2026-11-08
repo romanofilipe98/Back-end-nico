@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
@@ -16,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
 
 //criando tabela
 @Entity
@@ -55,7 +57,8 @@ public class entityAdministrador {
     private String sexo;
 
     @Column(name = "senha", nullable = false)
-    @Schema(description = "Senha de acesso (ficará criptografada no banco)", example = "SenhaForte123", accessMode = Schema.AccessMode.WRITE_ONLY)
+    @Schema(description = "Senha de acesso (ficará criptografada no banco)", example = "SenhaForte123@", accessMode = Schema.AccessMode.WRITE_ONLY)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
 
     @Column(name = "premium")
