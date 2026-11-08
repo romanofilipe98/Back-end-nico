@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.entity.entityUsuario;
+import br.com.comunicadornico.repository.repositoryAdministrador;
+import br.com.comunicadornico.repository.repositoryUsuario;
 import br.com.comunicadornico.service.serviceUsuario;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,15 +34,20 @@ public class controllerUsuario {
 
     @Autowired
     private serviceUsuario meuService;
+    @Autowired
+    private repositoryAdministrador administradorRepository;
 
- // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
+    @Autowired
+    private repositoryUsuario usuarioRepository;
+
+    // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
     @PostMapping //informa que o post dessa classe deve passar por aqui, é uma etiqueta de anotação
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Criar novo usuario", description = "Registra um novo Usuário no banco de dados (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados")
-    }) 
+    })
     public ResponseEntity<entityUsuario> criarUsuario(
             @RequestBody entityUsuario novoUsuario,
             Authentication authentication // O Spring injeta a identidade do JWT aqui
@@ -55,7 +63,7 @@ public class controllerUsuario {
 
     // 2. Read Consultar todos os registros - Rota Protegida
     @GetMapping
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Listar todos os usuários", description = "Retorna uma lista de todos os usuários cadastrados (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Usuários retornados com sucesso")
     public ResponseEntity<List<entityUsuario>> listarTodos() {
@@ -76,7 +84,7 @@ public class controllerUsuario {
 
     // READ - Consultar por ID
     @GetMapping("/{idUsuario}")
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Buscar usuário por ID", description = "Retorna os dados de um usuário específico pelo seu ID (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
@@ -110,6 +118,21 @@ public class controllerUsuario {
 
         meuService.excluirUsuario(idUsuario);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/meus-usuarios")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "Listar meus usuários", description = "Retorna os usuários vinculados ao administrador logado.")
+    public ResponseEntity<List<entityUsuario>> listarMeusUsuarios(Authentication authentication) {
+
+        // Pega o email do administrador pelo token
+        String emailAdminLogado = authentication.getName();
+        entityAdministrador admin = administradorRepository.findByEmail(emailAdminLogado)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado!"));
+
+        List<entityUsuario> meusUsuarios = usuarioRepository.findByAdministrador(admin);
+
+        return ResponseEntity.ok(meusUsuarios);
     }
 
 }
