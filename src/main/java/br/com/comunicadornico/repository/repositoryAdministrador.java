@@ -20,4 +20,6 @@ public interface repositoryAdministrador extends JpaRepository<entityAdministrad
 
     Optional<entityAdministrador> findByEmail(String email); // aqui busca o registro completo do administrador pelo email para o login
 
+    Optional<entityAdministrador> findByEmailIgnoreCase(String email);
+
 }
