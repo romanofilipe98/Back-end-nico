@@ -37,6 +37,10 @@ public class entityCategoria {
     @Schema(description = "Guarda o caminho da foto de capa da categoria", example = "https://exemplo.com/emocoes.png")
     private String fotoCat;
 
+    @Column(name = "foto_cat_public_id")
+    @Schema(hidden = true)
+    private String fotoCatPublicId;
+
     @Column(name = "posicaoCat")
     @Schema(description = "Posição da categoria no carrosel", example = "1")
     private int posicaoCat;
@@ -125,5 +129,13 @@ public class entityCategoria {
 
     public void setBotaoCategorias(List<entityBotaoCategoria> botaoCategorias) {
         this.botaoCategorias = botaoCategorias;
+    }
+
+    public String getFotoCatPublicId() {
+        return fotoCatPublicId;
+    }
+
+    public void setFotoCatPublicId(String fotoCatPublicId) {
+        this.fotoCatPublicId = fotoCatPublicId;
     }
 }

@@ -6,7 +6,8 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.com.comunicadornico.entity.entityCategoria;
-import br.com.comunicadornico.entity.entityUsuario;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface repositoryCategoria extends JpaRepository<entityCategoria, Long> {
 
@@ -14,4 +15,15 @@ public interface repositoryCategoria extends JpaRepository<entityCategoria, Long
     Optional<entityCategoria> findByNome(String nome);
 
     List<entityCategoria> findByNomeContainingIgnoreCase(String nome);
+
+    @Query("""
+        SELECT DISTINCT c
+        FROM entityCategoria c
+        WHERE c.usuario IS NULL
+           OR c.usuario.idUsuario = :idUsuario
+        ORDER BY c.posicaoCat, c.idCategoria
+        """)
+    List<entityCategoria> findCategoriasDisponiveisParaUsuario(
+            @Param("idUsuario") Long idUsuario
+    );
 }

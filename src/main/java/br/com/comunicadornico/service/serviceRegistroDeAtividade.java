@@ -21,13 +21,19 @@ public class serviceRegistroDeAtividade {
     private final repositoryRegistroDeAtividade repositoryRegistro;
     private final serviceUsuario usuarioService;
     private final serviceBotao botaoService;
+    private final ServiceBotaoResolvido botaoResolvidoService;
 
-    public serviceRegistroDeAtividade(repositoryRegistroDeAtividade repositoryRegistro,
-                                      serviceUsuario usuarioService,
-                                      serviceBotao botaoService) {
+    public serviceRegistroDeAtividade(
+            repositoryRegistroDeAtividade repositoryRegistro,
+            serviceUsuario usuarioService,
+            serviceBotao botaoService,
+            ServiceBotaoResolvido botaoResolvidoService) {
+
         this.repositoryRegistro = repositoryRegistro;
         this.usuarioService = usuarioService;
         this.botaoService = botaoService;
+        this.botaoResolvidoService = botaoResolvidoService;
+
     }
 
     // GRAVAÇÃO: soma 1 clique no registro do dia (usuário + botão), criando-o se ainda não existir
@@ -62,15 +68,24 @@ public class serviceRegistroDeAtividade {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "O botão está oculto e não pode ser acionado.");
         }
 
-        entityRegistroDeAtividade registro = gravarRegistro(usuario, botao);
+        entityRegistroDeAtividade registro
+                = gravarRegistro(usuario, botao);
+
+        var botaoResolvido
+                = botaoResolvidoService
+                        .pesquisarBotaoResolvidoParaUso(
+                                idUsuario,
+                                idBotao
+                        );
 
         return new BotaoAcionadoDTO(
                 botao.getIdBotao(),
                 botao.getLegenda(),
-                botao.getFoto(),
-                escolherAudio(botao, usuario),
+                botaoResolvido.foto(),
+                botaoResolvido.audioResolvido(),
                 registro.getIdRegistro(),
-                registro.getQuantidadeCliques());
+                registro.getQuantidadeCliques()
+        );
     }
 
     // CONSULTA dos registros de um usuário
@@ -80,12 +95,4 @@ public class serviceRegistroDeAtividade {
         return repositoryRegistro.findByUsuarioIdUsuarioOrderByDataHoraDesc(idUsuario)
                 .stream().map(RegistroAtividadeResponseDTO::de).toList();
     }
-
-    // áudio gravado pelo responsável tem prioridade; senão usa a voz escolhida (true = masculina)
-    private String escolherAudio(entityBotao botao, entityUsuario usuario) {
-        if (botao.getAudioPersonalizado() != null && !botao.getAudioPersonalizado().isBlank()) {
-            return botao.getAudioPersonalizado();
-        }
-        return usuario.isVoz() ? botao.getAudioMas() : botao.getAudioFem();
-    }
-}   
+}

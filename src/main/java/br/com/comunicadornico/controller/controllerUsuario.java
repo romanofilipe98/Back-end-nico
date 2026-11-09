@@ -23,6 +23,19 @@ import br.com.comunicadornico.entity.entityUsuario;
 import br.com.comunicadornico.repository.repositoryAdministrador;
 import br.com.comunicadornico.repository.repositoryUsuario;
 import br.com.comunicadornico.service.serviceUsuario;
+import br.com.comunicadornico.dto.BotaoResolvidoDTO;
+import br.com.comunicadornico.dto.CategoriaResolvidaDTO;
+import br.com.comunicadornico.dto.UsuarioResumoDTO;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import br.com.comunicadornico.service.ServiceMidiaBotao;
+import br.com.comunicadornico.service.ServiceMidiaCategoria;
+import br.com.comunicadornico.service.ServiceBotaoResolvido;
+import br.com.comunicadornico.service.ServiceCategoriaResolvida;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -42,6 +55,18 @@ public class controllerUsuario {
 
     @Autowired
     private repositoryUsuario usuarioRepository;
+
+    @Autowired
+    private ServiceBotaoResolvido botaoResolvidoService;
+
+    @Autowired
+    private ServiceCategoriaResolvida categoriaResolvidaService;
+
+    @Autowired
+    private ServiceMidiaBotao serviceMidiaBotao;
+
+    @Autowired
+    private ServiceMidiaCategoria serviceMidiaCategoria;
 
     // 1 - Metodo para criar um novo usuario (POST) - Rota Protegida
     @PostMapping //informa que o post dessa classe deve passar por aqui, é uma etiqueta de anotação
@@ -125,17 +150,197 @@ public class controllerUsuario {
 
     @GetMapping("/meus-usuarios")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Listar meus usuários", description = "Retorna os usuários vinculados ao administrador logado.")
-    public ResponseEntity<List<entityUsuario>> listarMeusUsuarios(Authentication authentication) {
+    @Operation(
+            summary = "Listar meus usuários",
+            description = "Retorna os usuários vinculados ao administrador autenticado."
+    )
+    public ResponseEntity<List<UsuarioResumoDTO>>
+            listarMeusUsuarios(
+                    Authentication authentication) {
 
-        // Pega o email do administrador pelo token
-        String emailAdminLogado = authentication.getName();
-        entityAdministrador admin = administradorRepository.findByEmail(emailAdminLogado)
-                .orElseThrow(() -> new RuntimeException("Administrador não encontrado!"));
+        String emailAdminLogado
+                = authentication.getName();
 
-        List<entityUsuario> meusUsuarios = usuarioRepository.findByAdministrador(admin);
+        entityAdministrador admin
+                = administradorRepository
+                        .findByEmail(emailAdminLogado)
+                        .orElseThrow(()
+                                -> new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Administrador não encontrado para o e-mail do token: ["
+                                        + emailAdminLogado
+                                        + "]"
+                                )
+                        );
+
+        List<UsuarioResumoDTO> meusUsuarios
+                = usuarioRepository
+                        .findByAdministrador(admin)
+                        .stream()
+                        .map(usuario
+                                -> new UsuarioResumoDTO(
+                                        usuario.getIdUsuario(),
+                                        usuario.getNome(),
+                                        usuario.getSexo(),
+                                        usuario.getNivelAutismo(),
+                                        usuario.getDataNascAut(),
+                                        usuario.isVoz()
+                                )
+                        )
+                        .toList();
 
         return ResponseEntity.ok(meusUsuarios);
     }
 
+    @GetMapping("/{idUsuario}/botoes-resolvidos")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Listar botões do comunicador",
+            description = "Retorna os botões com foto e áudio resolvidos conforme as personalizações e a preferência de voz do usuário."
+    )
+    public ResponseEntity<List<BotaoResolvidoDTO>>
+            listarBotoesResolvidos(
+                    @PathVariable Long idUsuario,
+                    Authentication authentication) {
+
+        return ResponseEntity.ok(
+                botaoResolvidoService
+                        .listarBotoesResolvidos(
+                                idUsuario,
+                                authentication.getName()
+                        )
+        );
+    }
+
+    @GetMapping("/{idUsuario}/categorias-resolvidas")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Listar categorias do comunicador",
+            description = "Retorna as categorias com a foto padrão ou personalizada para o usuário."
+    )
+    public ResponseEntity<List<CategoriaResolvidaDTO>>
+            listarCategoriasResolvidas(
+                    @PathVariable Long idUsuario,
+                    Authentication authentication) {
+
+        return ResponseEntity.ok(
+                categoriaResolvidaService
+                        .listarCategoriasResolvidas(
+                                idUsuario,
+                                authentication.getName()
+                        )
+        );
+    }
+
+    @PostMapping(
+            value = "/{idUsuario}/botoes/{idBotao}/personalizacao",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Personalizar botão do comunicador",
+            description = "Permite ao administrador configurar uma foto e um áudio personalizado para o botão do comunicador do usuário."
+    )
+    public ResponseEntity<BotaoResolvidoDTO>
+            personalizarBotao(
+                    @PathVariable Long idUsuario,
+                    @PathVariable Long idBotao,
+                    @RequestPart(
+                            value = "foto",
+                            required = false
+                    ) MultipartFile foto,
+                    @RequestPart(
+                            value = "audioPersonalizado",
+                            required = false
+                    ) MultipartFile audioPersonalizado,
+                    Authentication authentication) {
+
+        BotaoResolvidoDTO resultado
+                = serviceMidiaBotao.personalizarBotao(
+                        idUsuario,
+                        idBotao,
+                        foto,
+                        audioPersonalizado,
+                        authentication.getName()
+                );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @PostMapping(
+            value = "/{idUsuario}/categorias/{idCategoria}/personalizacao",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Personalizar categoria do comunicador",
+            description = "Permite ao administrador configurar uma foto personalizada para a categoria do comunicador do usuário."
+    )
+    public ResponseEntity<CategoriaResolvidaDTO>
+            personalizarCategoria(
+                    @PathVariable Long idUsuario,
+                    @PathVariable Long idCategoria,
+                    @RequestPart("foto") MultipartFile foto,
+                    Authentication authentication) {
+
+        CategoriaResolvidaDTO resultado
+                = serviceMidiaCategoria.personalizarCategoria(
+                        idUsuario,
+                        idCategoria,
+                        foto,
+                        authentication.getName()
+                );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @DeleteMapping(
+            "/{idUsuario}/botoes/{idBotao}/personalizacao"
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Remover personalização do botão",
+            description = "Exclui a foto e o áudio personalizados do Cloudinary e faz o botão voltar a usar as mídias padrão."
+    )
+    public ResponseEntity<BotaoResolvidoDTO>
+            removerPersonalizacaoBotao(
+                    @PathVariable Long idUsuario,
+                    @PathVariable Long idBotao,
+                    Authentication authentication) {
+
+        BotaoResolvidoDTO resultado
+                = serviceMidiaBotao
+                        .removerPersonalizacaoBotao(
+                                idUsuario,
+                                idBotao,
+                                authentication.getName()
+                        );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @DeleteMapping(
+            "/{idUsuario}/categorias/{idCategoria}/personalizacao"
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Remover personalização da categoria",
+            description = "Exclui a foto personalizada do Cloudinary e faz a categoria voltar a usar sua foto padrão."
+    )
+    public ResponseEntity<CategoriaResolvidaDTO>
+            removerPersonalizacaoCategoria(
+                    @PathVariable Long idUsuario,
+                    @PathVariable Long idCategoria,
+                    Authentication authentication) {
+
+        CategoriaResolvidaDTO resultado
+                = serviceMidiaCategoria
+                        .removerPersonalizacaoCategoria(
+                                idUsuario,
+                                idCategoria,
+                                authentication.getName()
+                        );
+
+        return ResponseEntity.ok(resultado);
+    }
 }
