@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +14,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import br.com.comunicadornico.dto.MidiaBotaoResponseDTO;
 import br.com.comunicadornico.entity.entityBotao;
+import br.com.comunicadornico.service.ServiceMidiaBotao;
 import br.com.comunicadornico.service.serviceBotao;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,15 +31,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/botoes")
-@Tag(name="Botões", description="Endpoints para gestão, cadastro e consulta de botões")
+@Tag(name = "Botões", description = "Endpoints para gestão, cadastro e consulta de botões")
 public class controllerBotao {
 
     @Autowired
     private serviceBotao meuService;
 
+    @Autowired
+    private ServiceMidiaBotao serviceMidiaBotao;
+
     // 1- Criar Botao - Rota Protegida
     @PostMapping
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Criar novo Botão", description = "Registra um novo botão no banco de dados (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Botão criado com sucesso"),
@@ -48,7 +57,7 @@ public class controllerBotao {
 
     // 2. Read Consultar todas os botoes - Rota Protegida
     @GetMapping
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Listar Todos os botões", description = "Retorna uma lista de todos os botões cadastrados (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
     public ResponseEntity<List<entityBotao>> listarTodos() {
@@ -60,7 +69,7 @@ public class controllerBotao {
 
     // READ - Consultar por ID - Rota Protegida
     @GetMapping("/{idBotao}")
-    @SecurityRequirement(name="BearerAuth")
+    @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Buscar por ID", description = "Retorna os dados de um botão específico pelo seu ID (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Botão encontrado"),
@@ -102,5 +111,45 @@ public class controllerBotao {
         meuService.excluirBotao(idBotao);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PostMapping(
+            value = "/{idBotao}/midia",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Atualizar mídias padrão do botão",
+            description = "Envia a foto e os áudios feminino e masculino para o Cloudinary. Os arquivos não enviados permanecem inalterados."
+    )
+    public ResponseEntity<MidiaBotaoResponseDTO>
+            atualizarMidiaPadrao(
+                    @PathVariable Long idBotao,
+                    @RequestPart(
+                            value = "foto",
+                            required = false
+                    ) MultipartFile foto,
+                    @RequestPart(
+                            value = "audioFem",
+                            required = false
+                    ) MultipartFile audioFem,
+                    @RequestPart(
+                            value = "audioMas",
+                            required = false
+                    ) MultipartFile audioMas) {
+
+        entityBotao botaoAtualizado
+                = serviceMidiaBotao.atualizarMidiaPadrao(
+                        idBotao,
+                        foto,
+                        audioFem,
+                        audioMas
+                );
+
+        return ResponseEntity.ok(
+                MidiaBotaoResponseDTO.de(
+                        botaoAtualizado
+                )
+        );
     }
 }

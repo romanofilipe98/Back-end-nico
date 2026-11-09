@@ -2,7 +2,8 @@ package br.com.comunicadornico.repository;
 
 import java.util.List;
 import java.util.Optional;
-
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.com.comunicadornico.entity.entityBotao;
@@ -13,4 +14,15 @@ public interface repositoryBotao extends JpaRepository<entityBotao, Long> {
     Optional<entityBotao> findByLegenda(String legenda);
 
     List<entityBotao> findByLegendaContainingIgnoreCase(String legenda);
+
+    @Query("""
+        SELECT DISTINCT b
+        FROM entityBotao b
+        WHERE b.usuario IS NULL
+           OR b.usuario.idUsuario = :idUsuario
+        ORDER BY b.idBotao
+        """)
+    List<entityBotao> findBotoesDisponiveisParaUsuario(
+            @Param("idUsuario") Long idUsuario
+    );
 }

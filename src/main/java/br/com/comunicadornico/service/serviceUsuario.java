@@ -55,6 +55,50 @@ public class serviceUsuario {
                         "Usuário não encontrado: " + idUsuario));
     }
 
+    public entityUsuario validarUsuarioDoAdministrador(
+        Long idUsuario,
+        String emailAdministrador) {
+
+    if (emailAdministrador == null ||
+            emailAdministrador.isBlank()) {
+
+        throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Administrador não autenticado."
+        );
+    }
+
+    entityUsuario usuario = repositoryUsuario.findById(idUsuario)
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Usuário não encontrado: " + idUsuario
+                    )
+            );
+
+    if (usuario.getAdministrador() == null) {
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "O usuário não está vinculado a um administrador."
+        );
+    }
+
+    String emailAdministradorDoUsuario =
+            usuario.getAdministrador().getEmail();
+
+    if (emailAdministradorDoUsuario == null ||
+            !emailAdministradorDoUsuario.equalsIgnoreCase(
+                    emailAdministrador)) {
+
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "O administrador autenticado não pode configurar este usuário."
+        );
+    }
+
+    return usuario;
+}
+
     // READ - por nome
     public List<entityUsuario> pesquisarUsuario(String nome) {
         return repositoryUsuario.findByNomeContainingIgnoreCase(nome);

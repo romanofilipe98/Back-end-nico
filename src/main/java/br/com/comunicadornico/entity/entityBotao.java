@@ -37,6 +37,10 @@ public class entityBotao {
     @Schema(description = "URL, caminho ou Base64 da imagem associada ao botão", example = "https://exemplo.com/agua.png")
     private String foto;
 
+    @Column(name = "foto_public_id")
+    @Schema(hidden = true)
+    private String fotoPublicId;
+
     @Column(name = "audioPersonalizado")
     @Schema(description = "Caminho para o arquivo de áudio gravado pelo usuário", example = "/audios/personalizado_agua.mp3")
     private String audioPersonalizado;
@@ -45,9 +49,17 @@ public class entityBotao {
     @Schema(description = "Caminho para o arquivo de áudio gerado com voz feminina", example = "/audios/fem_agua.mp3")
     private String audioFem;
 
+    @Column(name = "audio_fem_public_id")
+    @Schema(hidden = true)
+    private String audioFemPublicId;
+
     @Column(name = "audioMas")
     @Schema(description = "Caminho para o arquivo de áudio gerado com voz masculina", example = "/audios/masc_agua.mp3")
     private String audioMas;
+
+    @Column(name = "audio_mas_public_id")
+    @Schema(hidden = true)
+    private String audioMasPublicId;
 
     @Column(name = "tamanhoBotao")
     @Schema(description = "Define a escala ou tamanho renderizado do botão", example = "2")
@@ -215,5 +227,29 @@ public class entityBotao {
 
     public void setTiraDeSentenca(entityTiraDeSentenca tiraDeSentenca) {
         this.tiraDeSentenca = tiraDeSentenca;
+    }
+
+    public String getFotoPublicId() {
+        return fotoPublicId;
+    }
+
+    public void setFotoPublicId(String fotoPublicId) {
+        this.fotoPublicId = fotoPublicId;
+    }
+
+    public String getAudioFemPublicId() {
+        return audioFemPublicId;
+    }
+
+    public void setAudioFemPublicId(String audioFemPublicId) {
+        this.audioFemPublicId = audioFemPublicId;
+    }
+
+    public String getAudioMasPublicId() {
+        return audioMasPublicId;
+    }
+
+    public void setAudioMasPublicId(String audioMasPublicId) {
+        this.audioMasPublicId = audioMasPublicId;
     }
 }
