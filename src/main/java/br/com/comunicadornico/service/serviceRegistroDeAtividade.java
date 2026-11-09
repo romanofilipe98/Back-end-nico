@@ -1,6 +1,7 @@
 package br.com.comunicadornico.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -36,25 +37,24 @@ public class serviceRegistroDeAtividade {
 
     }
 
-    // GRAVAÇÃO: soma 1 clique no registro do dia (usuário + botão), criando-o se ainda não existir
     @Transactional
-    public entityRegistroDeAtividade gravarRegistro(entityUsuario usuario, entityBotao botao) {
-        LocalDateTime agora = LocalDateTime.now();
-        LocalDateTime inicioDoDia = agora.toLocalDate().atStartOfDay();
-        LocalDateTime inicioDoDiaSeguinte = inicioDoDia.plusDays(1);
+    public entityRegistroDeAtividade gravarRegistro(
+            entityUsuario usuario,
+            entityBotao botao) {
 
-        entityRegistroDeAtividade registro = repositoryRegistro
-                .buscarDoDia(usuario.getIdUsuario(), botao.getIdBotao(), inicioDoDia, inicioDoDiaSeguinte)
-                .orElseGet(() -> {
-                    entityRegistroDeAtividade novo = new entityRegistroDeAtividade();
-                    novo.setUsuario(usuario);
-                    novo.setBotao(botao);
-                    novo.setQuantidadeCliques(0);
-                    return novo;
-                });
+        entityRegistroDeAtividade registro
+                = new entityRegistroDeAtividade();
 
-        registro.setQuantidadeCliques(registro.getQuantidadeCliques() + 1);
-        registro.setDataHora(agora);
+        registro.setUsuario(usuario);
+        registro.setBotao(botao);
+        registro.setQuantidadeCliques(1);
+
+        registro.setDataHora(
+                LocalDateTime.now(
+                        ZoneId.of("America/Sao_Paulo")
+                )
+        );
+
         return repositoryRegistro.save(registro);
     }
 
