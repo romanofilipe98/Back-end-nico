@@ -5,11 +5,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
-
 
 import br.com.comunicadornico.dto.BotaoResolvidoDTO;
 import br.com.comunicadornico.entity.entityBotao;
@@ -127,7 +126,10 @@ public class ServiceBotaoResolvido {
             entityBotaoPersonalizacao personalizacao) {
 
         String fotoResolvida
-                = resolverFoto(botao, personalizacao);
+                = resolverFoto(
+                        botao,
+                        personalizacao
+                );
 
         String audioResolvido
                 = resolverAudio(
@@ -137,7 +139,9 @@ public class ServiceBotaoResolvido {
                 );
 
         boolean personalizado
-                = possuiPersonalizacao(personalizacao);
+                = possuiPersonalizacao(
+                        personalizacao
+                );
 
         return new BotaoResolvidoDTO(
                 botao.getIdBotao(),
@@ -147,8 +151,29 @@ public class ServiceBotaoResolvido {
                 audioResolvido,
                 botao.getTamanhoBotao(),
                 botao.isOculto(),
-                personalizado
+                personalizado,
+                resolverIdsCategorias(botao)
         );
+    }
+
+    private List<Long> resolverIdsCategorias(
+            entityBotao botao) {
+
+        if (botao.getBotaoCategorias() == null) {
+            return List.of();
+        }
+
+        return botao.getBotaoCategorias()
+                .stream()
+                .filter(relacao
+                        -> relacao.getCategoria() != null
+                )
+                .map(relacao
+                        -> relacao.getCategoria()
+                                .getIdCategoria()
+                )
+                .distinct()
+                .toList();
     }
 
     private String resolverFoto(
