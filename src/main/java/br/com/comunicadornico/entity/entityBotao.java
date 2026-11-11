@@ -33,6 +33,36 @@ public class entityBotao {
     @Schema(description = "Código hexadecimal ou nome da cor de fundo do botão", example = "#FFFFFF")
     private String corFundo;
 
+    @Column(
+            name = "cor_fundo_legenda",
+            length = 7
+    )
+    @Schema(
+            description = "Cor de fundo da tira de legenda",
+            example = "#FFFFFF"
+    )
+    private String corFundoLegenda = "#FFFFFF";
+
+    @Column(
+            name = "cor_legenda",
+            length = 7
+    )
+    @Schema(
+            description = "Cor do texto da legenda",
+            example = "#000000"
+    )
+    private String corLegenda = "#000000";
+
+    @Column(
+            name = "exibir_legenda",
+            nullable = false
+    )
+    @Schema(
+            description = "Indica se a legenda deve aparecer no botão",
+            example = "true"
+    )
+    private boolean exibirLegenda = true;
+
     @Column(name = "foto")
     @Schema(description = "URL, caminho ou Base64 da imagem associada ao botão", example = "https://exemplo.com/agua.png")
     private String foto;
@@ -271,5 +301,37 @@ public class entityBotao {
 
         this.audioPersonalizadoPublicId
                 = audioPersonalizadoPublicId;
+    }
+
+    public String getCorFundoLegenda() {
+        return corFundoLegenda;
+    }
+
+    public void setCorFundoLegenda(
+            String corFundoLegenda) {
+
+        this.corFundoLegenda
+                = corFundoLegenda;
+    }
+
+    public String getCorLegenda() {
+        return corLegenda;
+    }
+
+    public void setCorLegenda(
+            String corLegenda) {
+
+        this.corLegenda = corLegenda;
+    }
+
+    public boolean isExibirLegenda() {
+        return exibirLegenda;
+    }
+
+    public void setExibirLegenda(
+            boolean exibirLegenda) {
+
+        this.exibirLegenda
+                = exibirLegenda;
     }
 }

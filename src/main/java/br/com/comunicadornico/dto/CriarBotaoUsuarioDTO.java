@@ -3,44 +3,73 @@ package br.com.comunicadornico.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 public class CriarBotaoUsuarioDTO {
 
     @NotBlank(
-            message = "A legenda do botão é obrigatória."
+            message =
+                    "A legenda do botão é obrigatória."
     )
     private String legenda;
 
-    /*
-     * Cor de fundo do botão.
-     * Exemplo: #B3B4B7
-     */
     @NotBlank(
-            message = "A cor de fundo do botão é obrigatória."
+            message =
+                    "A cor de fundo do botão é obrigatória."
     )
-    private String corFundo;
+    @Pattern(
+            regexp = "^#[0-9A-Fa-f]{6}$",
+            message =
+                    "A cor de fundo do botão deve estar no formato hexadecimal."
+    )
+    private String corFundo =
+            "#FFFFFF";
+
+    @NotBlank(
+            message =
+                    "A cor de fundo da legenda é obrigatória."
+    )
+    @Pattern(
+            regexp = "^#[0-9A-Fa-f]{6}$",
+            message =
+                    "A cor de fundo da legenda deve estar no formato hexadecimal."
+    )
+    private String corFundoLegenda =
+            "#FFFFFF";
+
+    @NotBlank(
+            message =
+                    "A cor da legenda é obrigatória."
+    )
+    @Pattern(
+            regexp = "^#[0-9A-Fa-f]{6}$",
+            message =
+                    "A cor da legenda deve estar no formato hexadecimal."
+    )
+    private String corLegenda =
+            "#000000";
+
+    private boolean exibirLegenda =
+            true;
 
     @Min(
             value = 1,
-            message = "O tamanho do botão deve ser maior que zero."
+            message =
+                    "O tamanho do botão deve ser maior que zero."
     )
     private int tamanhoBotao = 1;
 
     @NotNull(
-            message = "O usuário é obrigatório."
+            message =
+                    "O usuário é obrigatório."
     )
     private Long idUsuario;
 
     @NotNull(
-            message = "A categoria é obrigatória."
+            message =
+                    "A categoria é obrigatória."
     )
     private Long idCategoria;
-
-    @Min(
-            value = 1,
-            message = "A posição deve ser maior que zero."
-    )
-    private int posicao = 1;
 
     public CriarBotaoUsuarioDTO() {
     }
@@ -49,7 +78,9 @@ public class CriarBotaoUsuarioDTO {
         return legenda;
     }
 
-    public void setLegenda(String legenda) {
+    public void setLegenda(
+            String legenda) {
+
         this.legenda = legenda;
     }
 
@@ -57,23 +88,62 @@ public class CriarBotaoUsuarioDTO {
         return corFundo;
     }
 
-    public void setCorFundo(String corFundo) {
+    public void setCorFundo(
+            String corFundo) {
+
         this.corFundo = corFundo;
+    }
+
+    public String getCorFundoLegenda() {
+        return corFundoLegenda;
+    }
+
+    public void setCorFundoLegenda(
+            String corFundoLegenda) {
+
+        this.corFundoLegenda =
+                corFundoLegenda;
+    }
+
+    public String getCorLegenda() {
+        return corLegenda;
+    }
+
+    public void setCorLegenda(
+            String corLegenda) {
+
+        this.corLegenda = corLegenda;
+    }
+
+    public boolean isExibirLegenda() {
+        return exibirLegenda;
+    }
+
+    public void setExibirLegenda(
+            boolean exibirLegenda) {
+
+        this.exibirLegenda =
+                exibirLegenda;
     }
 
     public int getTamanhoBotao() {
         return tamanhoBotao;
     }
 
-    public void setTamanhoBotao(int tamanhoBotao) {
-        this.tamanhoBotao = tamanhoBotao;
+    public void setTamanhoBotao(
+            int tamanhoBotao) {
+
+        this.tamanhoBotao =
+                tamanhoBotao;
     }
 
     public Long getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(Long idUsuario) {
+    public void setIdUsuario(
+            Long idUsuario) {
+
         this.idUsuario = idUsuario;
     }
 
@@ -81,15 +151,10 @@ public class CriarBotaoUsuarioDTO {
         return idCategoria;
     }
 
-    public void setIdCategoria(Long idCategoria) {
-        this.idCategoria = idCategoria;
-    }
+    public void setIdCategoria(
+            Long idCategoria) {
 
-    public int getPosicao() {
-        return posicao;
-    }
-
-    public void setPosicao(int posicao) {
-        this.posicao = posicao;
+        this.idCategoria =
+                idCategoria;
     }
 }

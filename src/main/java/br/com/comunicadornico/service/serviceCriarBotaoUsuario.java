@@ -3,9 +3,11 @@ package br.com.comunicadornico.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import br.com.comunicadornico.dto.CriarBotaoUsuarioResponseDTO;
+
 import br.com.comunicadornico.dto.CriarBotaoUsuarioDTO;
+import br.com.comunicadornico.dto.CriarBotaoUsuarioResponseDTO;
 import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.entity.entityBotao;
 import br.com.comunicadornico.entity.entityBotaoCategoria;
@@ -14,7 +16,6 @@ import br.com.comunicadornico.entity.entityUsuario;
 import br.com.comunicadornico.repository.repositoryBotao;
 import br.com.comunicadornico.repository.repositoryBotaoCategoria;
 import br.com.comunicadornico.repository.repositoryCategoria;
-import org.springframework.web.multipart.MultipartFile;
 import br.com.comunicadornico.service.ServiceCloudinaryStorage.ResultadoUpload;
 
 @Service
@@ -125,6 +126,19 @@ public class serviceCriarBotaoUsuario {
             botao.setCorFundo(
                     dados.getCorFundo().trim()
             );
+            botao.setCorFundoLegenda(
+                    dados.getCorFundoLegenda()
+                            .trim()
+            );
+
+            botao.setCorLegenda(
+                    dados.getCorLegenda()
+                            .trim()
+            );
+
+            botao.setExibirLegenda(
+                    dados.isExibirLegenda()
+            );
 
             botao.setTamanhoBotao(
                     dados.getTamanhoBotao()
@@ -201,15 +215,23 @@ public class serviceCriarBotaoUsuario {
             /*
          * Associação com a categoria.
              */
+            int maiorPosicao
+                    = repositoryBotaoCategoria
+                            .buscarMaiorPosicaoDaCategoria(
+                                    categoria.getIdCategoria()
+                            );
+
+            int novaPosicao
+                    = maiorPosicao + 1;
+
             entityBotaoCategoria relacao
                     = new entityBotaoCategoria();
 
             relacao.setBotao(botaoSalvo);
             relacao.setCategoria(categoria);
             relacao.setPosicao(
-                    dados.getPosicao()
+                    novaPosicao
             );
-
             entityBotaoCategoria relacaoSalva
                     = repositoryBotaoCategoria
                             .saveAndFlush(
@@ -296,6 +318,30 @@ public class serviceCriarBotaoUsuario {
             );
         }
 
+        if (dados.getCorFundoLegenda() == null
+                || !dados.getCorFundoLegenda()
+                        .matches(
+                                "^#[0-9A-Fa-f]{6}$"
+                        )) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A cor de fundo da legenda deve estar no formato hexadecimal, por exemplo #FFFFFF."
+            );
+        }
+
+        if (dados.getCorLegenda() == null
+                || !dados.getCorLegenda()
+                        .matches(
+                                "^#[0-9A-Fa-f]{6}$"
+                        )) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A cor da legenda deve estar no formato hexadecimal, por exemplo #000000."
+            );
+        }
+
         if (dados.getIdUsuario() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -317,12 +363,6 @@ public class serviceCriarBotaoUsuario {
             );
         }
 
-        if (dados.getPosicao() < 1) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A posição do botão deve ser maior que zero."
-            );
-        }
     }
 
     private void validarCategoriaDisponivel(

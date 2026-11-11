@@ -13,21 +13,39 @@ public class CriarBotaoUsuarioResponseDTO {
 
     @Schema(
             description = "ID do botão criado",
-            example = "25"
+            example = "81"
     )
     private Long idBotao;
 
     @Schema(
             description = "Legenda exibida no botão",
-            example = "Quero brincar"
+            example = "Quero desenhar"
     )
     private String legenda;
 
     @Schema(
             description = "Cor de fundo do botão",
-            example = "#B3B4B7"
+            example = "#FFFFFF"
     )
     private String corFundo;
+
+    @Schema(
+            description = "Cor de fundo da tira de legenda",
+            example = "#B3B4B7"
+    )
+    private String corFundoLegenda;
+
+    @Schema(
+            description = "Cor do texto da legenda",
+            example = "#000000"
+    )
+    private String corLegenda;
+
+    @Schema(
+            description = "Indica se a legenda aparece no botão",
+            example = "true"
+    )
+    private boolean exibirLegenda;
 
     @Schema(
             description = "Tamanho configurado para o botão",
@@ -53,7 +71,7 @@ public class CriarBotaoUsuarioResponseDTO {
 
     @Schema(
             description = "ID do usuário que pode acessar o botão",
-            example = "8"
+            example = "1"
     )
     private Long idUsuario;
 
@@ -65,20 +83,19 @@ public class CriarBotaoUsuarioResponseDTO {
 
     @Schema(
             description = "ID da categoria associada",
-            example = "4"
+            example = "2"
     )
     private Long idCategoria;
 
     @Schema(
             description = "Nome da categoria associada",
-            example = "Ações"
+            example = "Higiene"
     )
     private String nomeCategoria;
 
     @Schema(
-            description =
-                    "Posição do botão dentro da categoria",
-            example = "3"
+            description = "Posição calculada automaticamente dentro da categoria",
+            example = "10"
     )
     private int posicao;
 
@@ -89,6 +106,9 @@ public class CriarBotaoUsuarioResponseDTO {
             Long idBotao,
             String legenda,
             String corFundo,
+            String corFundoLegenda,
+            String corLegenda,
+            boolean exibirLegenda,
             int tamanhoBotao,
             boolean oculto,
             String foto,
@@ -102,14 +122,22 @@ public class CriarBotaoUsuarioResponseDTO {
         this.idBotao = idBotao;
         this.legenda = legenda;
         this.corFundo = corFundo;
-        this.tamanhoBotao = tamanhoBotao;
+        this.corFundoLegenda =
+                corFundoLegenda;
+        this.corLegenda = corLegenda;
+        this.exibirLegenda =
+                exibirLegenda;
+        this.tamanhoBotao =
+                tamanhoBotao;
         this.oculto = oculto;
         this.foto = foto;
         this.audioPersonalizado =
                 audioPersonalizado;
         this.idUsuario = idUsuario;
-        this.nomeUsuario = nomeUsuario;
-        this.idCategoria = idCategoria;
+        this.nomeUsuario =
+                nomeUsuario;
+        this.idCategoria =
+                idCategoria;
         this.nomeCategoria =
                 nomeCategoria;
         this.posicao = posicao;
@@ -127,6 +155,9 @@ public class CriarBotaoUsuarioResponseDTO {
                 botao.getIdBotao(),
                 botao.getLegenda(),
                 botao.getCorFundo(),
+                botao.getCorFundoLegenda(),
+                botao.getCorLegenda(),
+                botao.isExibirLegenda(),
                 botao.getTamanhoBotao(),
                 botao.isOculto(),
                 botao.getFoto(),
@@ -175,6 +206,39 @@ public class CriarBotaoUsuarioResponseDTO {
             String corFundo) {
 
         this.corFundo = corFundo;
+    }
+
+    public String getCorFundoLegenda() {
+        return corFundoLegenda;
+    }
+
+    public void setCorFundoLegenda(
+            String corFundoLegenda) {
+
+        this.corFundoLegenda =
+                corFundoLegenda;
+    }
+
+    public String getCorLegenda() {
+        return corLegenda;
+    }
+
+    public void setCorLegenda(
+            String corLegenda) {
+
+        this.corLegenda =
+                corLegenda;
+    }
+
+    public boolean isExibirLegenda() {
+        return exibirLegenda;
+    }
+
+    public void setExibirLegenda(
+            boolean exibirLegenda) {
+
+        this.exibirLegenda =
+                exibirLegenda;
     }
 
     public int getTamanhoBotao() {
