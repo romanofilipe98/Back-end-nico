@@ -1,7 +1,8 @@
 package br.com.comunicadornico.controller;
 
+import java.security.Principal;
 import java.util.List;
-
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,17 +18,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import br.com.comunicadornico.dto.CriarBotaoUsuarioDTO;
+import br.com.comunicadornico.dto.CriarBotaoUsuarioResponseDTO;
 import br.com.comunicadornico.dto.MidiaBotaoResponseDTO;
 import br.com.comunicadornico.entity.entityBotao;
 import br.com.comunicadornico.service.ServiceMidiaBotao;
 import br.com.comunicadornico.service.serviceBotao;
+import br.com.comunicadornico.service.serviceCriarBotaoUsuario;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @RestController
 @RequestMapping("/api/botoes")
@@ -39,6 +47,12 @@ public class controllerBotao {
 
     @Autowired
     private ServiceMidiaBotao serviceMidiaBotao;
+
+    @Autowired
+    private serviceCriarBotaoUsuario serviceCriarBotaoUsuario;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // 1- Criar Botao - Rota Protegida
     @PostMapping
@@ -151,5 +165,90 @@ public class controllerBotao {
                         botaoAtualizado
                 )
         );
+    }
+
+    @PostMapping(
+            value = "/usuario",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Criar botão exclusivo para um usuário",
+            description = """
+                Cria um botão vinculado ao usuário informado.
+                O administrador é identificado pelo token JWT.
+                O botão recebe uma foto, um áudio personalizado
+                e é associado à categoria selecionada.
+                """
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "201",
+                description = "Botão criado com sucesso."
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Dados ou arquivos inválidos."
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Administrador não autenticado."
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "O usuário ou a categoria não pertence ao administrador."
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Usuário ou categoria não encontrado."
+        ),
+        @ApiResponse(
+                responseCode = "415",
+                description = "Formato da requisição não suportado."
+        )
+    })
+    public ResponseEntity<CriarBotaoUsuarioResponseDTO>
+            criarBotaoUsuario(
+                    @RequestPart("dados") String dadosJson,
+                    @RequestPart("foto") MultipartFile foto,
+                    @RequestPart("audioPersonalizado") MultipartFile audioPersonalizado,
+                    Principal principal) {
+
+        if (principal == null
+                || principal.getName() == null
+                || principal.getName().isBlank()) {
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+
+        CriarBotaoUsuarioDTO dados;
+
+        try {
+            dados = objectMapper.readValue(
+                    dadosJson,
+                    CriarBotaoUsuarioDTO.class
+            );
+        } catch (JsonProcessingException erroJson) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O campo dados contém um JSON inválido.",
+                    erroJson
+            );
+        }
+
+        CriarBotaoUsuarioResponseDTO resposta
+                = serviceCriarBotaoUsuario.criar(
+                        dados,
+                        foto,
+                        audioPersonalizado,
+                        principal.getName()
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(resposta);
     }
 }

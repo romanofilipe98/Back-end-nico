@@ -45,6 +45,15 @@ public class entityBotao {
     @Schema(description = "Caminho para o arquivo de áudio gravado pelo usuário", example = "/audios/personalizado_agua.mp3")
     private String audioPersonalizado;
 
+    @Column(
+            name = "audio_personalizado_public_id"
+    )
+    @Schema(
+            description
+            = "Public ID do áudio personalizado no Cloudinary"
+    )
+    private String audioPersonalizadoPublicId;
+
     @Column(name = "audioFem")
     @Schema(description = "Caminho para o arquivo de áudio gerado com voz feminina", example = "/audios/fem_agua.mp3")
     private String audioFem;
@@ -251,5 +260,16 @@ public class entityBotao {
 
     public void setAudioMasPublicId(String audioMasPublicId) {
         this.audioMasPublicId = audioMasPublicId;
+    }
+
+    public String getAudioPersonalizadoPublicId() {
+        return audioPersonalizadoPublicId;
+    }
+
+    public void setAudioPersonalizadoPublicId(
+            String audioPersonalizadoPublicId) {
+
+        this.audioPersonalizadoPublicId
+                = audioPersonalizadoPublicId;
     }
 }

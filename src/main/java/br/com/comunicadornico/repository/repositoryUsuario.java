@@ -8,10 +8,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.entity.entityUsuario;
 
-public interface repositoryUsuario extends JpaRepository<entityUsuario, Long> {
+public interface repositoryUsuario
+        extends JpaRepository<entityUsuario, Long> {
 
-    Optional<entityUsuario> findByNome(String nome);
+    Optional<entityUsuario> findByNome(
+            String nome
+    );
 
-    List<entityUsuario> findByNomeContainingIgnoreCase(String nome);
-    List<entityUsuario> findByAdministrador(entityAdministrador administrador);
+    List<entityUsuario>
+            findByNomeContainingIgnoreCase(
+                    String nome
+            );
+
+    List<entityUsuario> findByAdministrador(
+            entityAdministrador administrador
+    );
+
+    Optional<entityUsuario>
+            findByIdUsuarioAndAdministrador(
+                    Long idUsuario,
+                    entityAdministrador administrador
+            );
 }
