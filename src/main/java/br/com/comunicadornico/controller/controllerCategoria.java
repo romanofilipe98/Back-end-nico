@@ -1,5 +1,6 @@
 package br.com.comunicadornico.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +18,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.com.comunicadornico.dto.CriarCategoriaUsuarioDTO;
+import br.com.comunicadornico.dto.CriarCategoriaUsuarioResponseDTO;
 import br.com.comunicadornico.dto.MidiaCategoriaResponseDTO;
 import br.com.comunicadornico.entity.entityCategoria;
 import br.com.comunicadornico.service.ServiceMidiaCategoria;
 import br.com.comunicadornico.service.serviceCategoria;
-
+import br.com.comunicadornico.service.serviceCriarCategoriaUsuario;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -40,6 +47,12 @@ public class controllerCategoria {
 
     @Autowired
     private ServiceMidiaCategoria serviceMidiaCategoria;
+
+    @Autowired
+    private serviceCriarCategoriaUsuario serviceCriarCategoriaUsuario;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @PostMapping
     @SecurityRequirement(name = "BearerAuth")
@@ -137,6 +150,98 @@ public class controllerCategoria {
                         categoriaAtualizada
                 )
         );
+    }
+
+    @PostMapping(
+            value = "/usuario",
+            consumes
+            = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces
+            = MediaType.APPLICATION_JSON_VALUE
+    )
+    @SecurityRequirement(
+            name = "BearerAuth"
+    )
+    @Operation(
+            summary
+            = "Criar categoria exclusiva para um usuário",
+            description = """
+                Cria uma categoria vinculada ao usuário informado.
+                O administrador é identificado pelo token JWT.
+                A categoria recebe uma imagem e uma lista ordenada
+                de botões globais ou pertencentes ao mesmo usuário.
+                """
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "201",
+                description
+                = "Categoria criada com sucesso."
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description
+                = "Dados, imagem ou ordem dos botões inválidos."
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description
+                = "Administrador não autenticado."
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description
+                = "O usuário ou algum botão não pertence ao administrador."
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description
+                = "Usuário ou botão não encontrado."
+        )
+    })
+    public ResponseEntity<
+        CriarCategoriaUsuarioResponseDTO>
+            criarCategoriaUsuario(
+                    @RequestPart("dados") String dadosJson,
+                    @RequestPart("foto") MultipartFile foto,
+                    Principal principal) {
+
+        if (principal == null
+                || principal.getName() == null
+                || principal.getName().isBlank()) {
+
+            return ResponseEntity
+                    .status(
+                            HttpStatus.UNAUTHORIZED
+                    )
+                    .build();
+        }
+
+        CriarCategoriaUsuarioDTO dados;
+
+        try {
+            dados = objectMapper.readValue(
+                    dadosJson,
+                    CriarCategoriaUsuarioDTO.class
+            );
+        } catch (JsonProcessingException erroJson) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O campo dados contém um JSON inválido.",
+                    erroJson
+            );
+        }
+
+        CriarCategoriaUsuarioResponseDTO resposta
+                = serviceCriarCategoriaUsuario.criar(
+                        dados,
+                        foto,
+                        principal.getName()
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(resposta);
     }
 
 }

@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import br.com.comunicadornico.entity.entityCategoria;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import br.com.comunicadornico.entity.entityCategoria;
 
 public interface repositoryCategoria extends JpaRepository<entityCategoria, Long> {
 
@@ -26,4 +26,18 @@ public interface repositoryCategoria extends JpaRepository<entityCategoria, Long
     List<entityCategoria> findCategoriasDisponiveisParaUsuario(
             @Param("idUsuario") Long idUsuario
     );
+
+    @Query("""
+        SELECT COALESCE(MAX(categoria.posicaoCat), 0)
+        FROM entityCategoria categoria
+        WHERE (
+            categoria.usuario IS NULL
+            AND categoria.administrador IS NULL
+        )
+        OR categoria.usuario.idUsuario = :idUsuario
+        """)
+    int buscarMaiorPosicaoDisponivelParaUsuario(
+            @Param("idUsuario") Long idUsuario
+    );
+
 }
