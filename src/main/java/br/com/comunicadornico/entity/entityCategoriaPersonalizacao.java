@@ -18,36 +18,78 @@ import jakarta.persistence.UniqueConstraint;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_usuario_categoria_personalizacao",
-                        columnNames = {"fkUsuario", "fkCategoria"}
+                        columnNames = {
+                                "fkUsuario",
+                                "fkCategoria"
+                        }
                 )
         }
 )
 @Schema(
-        description = "Personalização de uma categoria do comunicador de um usuário, configurada pelo administrador"
+        description = "Personalização de uma categoria para um usuário"
 )
 public class entityCategoriaPersonalizacao {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
     private Long idCategoriaPersonalizacao;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "fkUsuario", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "fkUsuario",
+            nullable = false
+    )
     @Schema(hidden = true)
     private entityUsuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "fkCategoria", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "fkCategoria",
+            nullable = false
+    )
     @Schema(hidden = true)
     private entityCategoria categoria;
 
-    @Column(name = "foto", length = 2048)
-    @Schema(description = "URL da foto configurada pelo administrador")
+    @Column(
+            name = "nome",
+            length = 255
+    )
+    @Schema(
+            description = "Nome personalizado da categoria"
+    )
+    private String nome;
+
+    @Column(
+            name = "foto",
+            length = 2048
+    )
+    @Schema(
+            description = "URL da foto personalizada da categoria"
+    )
     private String foto;
 
-    @Column(name = "fotoPublicId", length = 500)
+    @Column(
+            name = "fotoPublicId",
+            length = 500
+    )
     @Schema(hidden = true)
     private String fotoPublicId;
+
+    @Column(
+            name = "oculto"
+    )
+    @Schema(
+            description = "Define se a categoria está oculta para o usuário"
+    )
+    private Boolean oculto;
 
     public entityCategoriaPersonalizacao() {
     }
@@ -70,14 +112,18 @@ public class entityCategoriaPersonalizacao {
 
     public void setIdCategoriaPersonalizacao(
             Long idCategoriaPersonalizacao) {
-        this.idCategoriaPersonalizacao = idCategoriaPersonalizacao;
+
+        this.idCategoriaPersonalizacao =
+                idCategoriaPersonalizacao;
     }
 
     public entityUsuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(entityUsuario usuario) {
+    public void setUsuario(
+            entityUsuario usuario) {
+
         this.usuario = usuario;
     }
 
@@ -85,15 +131,29 @@ public class entityCategoriaPersonalizacao {
         return categoria;
     }
 
-    public void setCategoria(entityCategoria categoria) {
+    public void setCategoria(
+            entityCategoria categoria) {
+
         this.categoria = categoria;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(
+            String nome) {
+
+        this.nome = nome;
     }
 
     public String getFoto() {
         return foto;
     }
 
-    public void setFoto(String foto) {
+    public void setFoto(
+            String foto) {
+
         this.foto = foto;
     }
 
@@ -101,7 +161,20 @@ public class entityCategoriaPersonalizacao {
         return fotoPublicId;
     }
 
-    public void setFotoPublicId(String fotoPublicId) {
-        this.fotoPublicId = fotoPublicId;
+    public void setFotoPublicId(
+            String fotoPublicId) {
+
+        this.fotoPublicId =
+                fotoPublicId;
+    }
+
+    public Boolean getOculto() {
+        return oculto;
+    }
+
+    public void setOculto(
+            Boolean oculto) {
+
+        this.oculto = oculto;
     }
 }

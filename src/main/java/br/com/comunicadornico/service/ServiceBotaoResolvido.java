@@ -21,92 +21,154 @@ import br.com.comunicadornico.repository.repositoryBotaoPersonalizacao;
 public class ServiceBotaoResolvido {
 
     private final repositoryBotao repositoryBotao;
-    private final repositoryBotaoPersonalizacao repositoryPersonalizacao;
+
+    private final repositoryBotaoPersonalizacao
+            repositoryPersonalizacao;
+
     private final serviceUsuario usuarioService;
 
     public ServiceBotaoResolvido(
             repositoryBotao repositoryBotao,
-            repositoryBotaoPersonalizacao repositoryPersonalizacao,
+            repositoryBotaoPersonalizacao
+                    repositoryPersonalizacao,
             serviceUsuario usuarioService) {
 
-        this.repositoryBotao = repositoryBotao;
-        this.repositoryPersonalizacao
-                = repositoryPersonalizacao;
-        this.usuarioService = usuarioService;
+        this.repositoryBotao =
+                repositoryBotao;
+
+        this.repositoryPersonalizacao =
+                repositoryPersonalizacao;
+
+        this.usuarioService =
+                usuarioService;
     }
 
     @Transactional(readOnly = true)
-    public List<BotaoResolvidoDTO> listarBotoesResolvidos(
-            Long idUsuario,
-            String emailAdministrador) {
+    public List<BotaoResolvidoDTO>
+            listarBotoesResolvidos(
+                    Long idUsuario,
+                    String emailAdministrador) {
 
-        entityUsuario usuario
-                = usuarioService.validarUsuarioDoAdministrador(
-                        idUsuario,
-                        emailAdministrador
-                );
+        entityUsuario usuario =
+                usuarioService
+                        .validarUsuarioDoAdministrador(
+                                idUsuario,
+                                emailAdministrador
+                        );
 
-        List<entityBotao> botoes
-                = repositoryBotao
+        List<entityBotao> botoes =
+                repositoryBotao
                         .findBotoesDisponiveisParaUsuario(
                                 idUsuario
                         );
 
-        Map<Long, entityBotaoPersonalizacao> personalizacaoPorBotao
-                = repositoryPersonalizacao
-                        .findByUsuarioIdUsuario(idUsuario)
+        Map<Long, entityBotaoPersonalizacao>
+                personalizacaoPorBotao =
+                repositoryPersonalizacao
+                        .findByUsuarioIdUsuario(
+                                idUsuario
+                        )
                         .stream()
                         .collect(
                                 Collectors.toMap(
-                                        personalizacao
-                                        -> personalizacao
-                                                .getBotao()
-                                                .getIdBotao(),
+                                        personalizacao ->
+                                                personalizacao
+                                                        .getBotao()
+                                                        .getIdBotao(),
                                         Function.identity()
                                 )
                         );
 
-        return botoes.stream()
-                .map(botao
-                        -> resolverBotao(
+        return botoes
+                .stream()
+                .map(botao ->
+                        resolverBotao(
                                 botao,
                                 usuario,
-                                personalizacaoPorBotao.get(
-                                        botao.getIdBotao()
-                                )
+                                personalizacaoPorBotao
+                                        .get(
+                                                botao.getIdBotao()
+                                        )
                         )
                 )
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public BotaoResolvidoDTO pesquisarBotaoResolvido(
-            Long idUsuario,
-            Long idBotao,
-            String emailAdministrador) {
+    public BotaoResolvidoDTO
+            pesquisarBotaoResolvido(
+                    Long idUsuario,
+                    Long idBotao,
+                    String emailAdministrador) {
 
-        entityUsuario usuario
-                = usuarioService.validarUsuarioDoAdministrador(
-                        idUsuario,
-                        emailAdministrador
-                );
+        entityUsuario usuario =
+                usuarioService
+                        .validarUsuarioDoAdministrador(
+                                idUsuario,
+                                emailAdministrador
+                        );
 
-        entityBotao botao = repositoryBotao.findById(idBotao)
-                .orElseThrow(()
-                        -> new org.springframework.web.server.ResponseStatusException(
-                                org.springframework.http.HttpStatus.NOT_FOUND,
-                                "Botão não encontrado: "
-                                + idBotao
-                        )
-                );
+        entityBotao botao =
+                repositoryBotao
+                        .findById(idBotao)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Botão não encontrado: "
+                                                + idBotao
+                                )
+                        );
 
         validarDisponibilidadeDoBotao(
                 botao,
                 idUsuario
         );
 
-        entityBotaoPersonalizacao personalizacao
-                = repositoryPersonalizacao
+        entityBotaoPersonalizacao personalizacao =
+                repositoryPersonalizacao
+                        .findByUsuarioIdUsuarioAndBotaoIdBotao(
+                                idUsuario,
+                                idBotao
+                        )
+                        .orElse(null);
+
+        return resolverBotao(
+                botao,
+                usuario,
+                personalizacao
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public BotaoResolvidoDTO
+            pesquisarBotaoResolvidoParaUso(
+                    Long idUsuario,
+                    Long idBotao) {
+
+        entityUsuario usuario =
+                usuarioService
+                        .pesquisarUsuarioPorId(
+                                idUsuario
+                        );
+
+        entityBotao botao =
+                repositoryBotao
+                        .findById(idBotao)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Botão não encontrado: "
+                                                + idBotao
+                                )
+                        );
+
+        validarDisponibilidadeDoBotao(
+                botao,
+                idUsuario
+        );
+
+        entityBotaoPersonalizacao personalizacao =
+                repositoryPersonalizacao
                         .findByUsuarioIdUsuarioAndBotaoIdBotao(
                                 idUsuario,
                                 idBotao
@@ -123,53 +185,135 @@ public class ServiceBotaoResolvido {
     private BotaoResolvidoDTO resolverBotao(
             entityBotao botao,
             entityUsuario usuario,
-            entityBotaoPersonalizacao personalizacao) {
+            entityBotaoPersonalizacao
+                    personalizacao) {
 
-        String fotoResolvida
-                = resolverFoto(
+        String legendaResolvida =
+                resolverTexto(
+                        personalizacao != null
+                                ? personalizacao
+                                        .getLegenda()
+                                : null,
+                        botao.getLegenda()
+                );
+
+        String corFundoResolvida =
+                resolverTexto(
+                        personalizacao != null
+                                ? personalizacao
+                                        .getCorFundo()
+                                : null,
+                        botao.getCorFundo()
+                );
+
+        String corFundoLegendaResolvida =
+                resolverTexto(
+                        personalizacao != null
+                                ? personalizacao
+                                        .getCorFundoLegenda()
+                                : null,
+                        botao.getCorFundoLegenda()
+                );
+
+        String corLegendaResolvida =
+                resolverTexto(
+                        personalizacao != null
+                                ? personalizacao
+                                        .getCorLegenda()
+                                : null,
+                        botao.getCorLegenda()
+                );
+
+        boolean exibirLegendaResolvida =
+                personalizacao != null
+                        && personalizacao
+                                .getExibirLegenda()
+                                != null
+                        ? personalizacao
+                                .getExibirLegenda()
+                        : botao.isExibirLegenda();
+
+        int tamanhoBotaoResolvido =
+                personalizacao != null
+                        && personalizacao
+                                .getTamanhoBotao()
+                                != null
+                        ? personalizacao
+                                .getTamanhoBotao()
+                        : botao.getTamanhoBotao();
+
+        boolean ocultoResolvido =
+                personalizacao != null
+                        && personalizacao
+                                .getOculto()
+                                != null
+                        ? personalizacao
+                                .getOculto()
+                        : botao.isOculto();
+
+        String fotoResolvida =
+                resolverFoto(
                         botao,
                         personalizacao
                 );
 
-        String audioResolvido
-                = resolverAudio(
+        String audioResolvido =
+                resolverAudio(
                         botao,
                         usuario,
                         personalizacao
                 );
 
-        boolean personalizado
-                = possuiPersonalizacao(
+        boolean personalizado =
+                possuiPersonalizacao(
                         personalizacao
                 );
 
+        boolean exclusivoUsuario =
+                botao.getUsuario() != null
+                        && botao.getUsuario()
+                                .getIdUsuario()
+                                .equals(
+                                        usuario.getIdUsuario()
+                                );
+
         return new BotaoResolvidoDTO(
                 botao.getIdBotao(),
-                botao.getLegenda(),
-                botao.getCorFundo(),
+                legendaResolvida,
+                corFundoResolvida,
+                corFundoLegendaResolvida,
+                corLegendaResolvida,
+                exibirLegendaResolvida,
                 fotoResolvida,
                 audioResolvido,
-                botao.getTamanhoBotao(),
-                botao.isOculto(),
+                tamanhoBotaoResolvido,
+                ocultoResolvido,
                 personalizado,
-                resolverIdsCategorias(botao)
+                exclusivoUsuario,
+                resolverIdsCategorias(
+                        botao
+                )
         );
     }
 
     private List<Long> resolverIdsCategorias(
             entityBotao botao) {
 
-        if (botao.getBotaoCategorias() == null) {
+        if (botao.getBotaoCategorias()
+                == null) {
+
             return List.of();
         }
 
-        return botao.getBotaoCategorias()
+        return botao
+                .getBotaoCategorias()
                 .stream()
-                .filter(relacao
-                        -> relacao.getCategoria() != null
+                .filter(relacao ->
+                        relacao.getCategoria()
+                                != null
                 )
-                .map(relacao
-                        -> relacao.getCategoria()
+                .map(relacao ->
+                        relacao.getCategoria()
                                 .getIdCategoria()
                 )
                 .distinct()
@@ -178,10 +322,13 @@ public class ServiceBotaoResolvido {
 
     private String resolverFoto(
             entityBotao botao,
-            entityBotaoPersonalizacao personalizacao) {
+            entityBotaoPersonalizacao
+                    personalizacao) {
 
         if (personalizacao != null
-                && possuiTexto(personalizacao.getFoto())) {
+                && possuiTexto(
+                        personalizacao.getFoto()
+                )) {
 
             return personalizacao.getFoto();
         }
@@ -192,7 +339,8 @@ public class ServiceBotaoResolvido {
     private String resolverAudio(
             entityBotao botao,
             entityUsuario usuario,
-            entityBotaoPersonalizacao personalizacao) {
+            entityBotaoPersonalizacao
+                    personalizacao) {
 
         if (personalizacao != null
                 && possuiTexto(
@@ -204,15 +352,11 @@ public class ServiceBotaoResolvido {
                     .getAudioPersonalizado();
         }
 
-        /*
-         * Mantém compatibilidade com registros antigos,
-         * que podem ter áudio personalizado diretamente
-         * em tb_botao.
-         */
         if (possuiTexto(
-                botao.getAudioPersonalizado())) {
-
-            return botao.getAudioPersonalizado();
+                botao.getAudioPersonalizado()
+        )) {
+            return botao
+                    .getAudioPersonalizado();
         }
 
         if (usuario.isVoz()) {
@@ -223,20 +367,64 @@ public class ServiceBotaoResolvido {
     }
 
     private boolean possuiPersonalizacao(
-            entityBotaoPersonalizacao personalizacao) {
+            entityBotaoPersonalizacao
+                    personalizacao) {
 
-        return personalizacao != null
-                && (possuiTexto(
+        if (personalizacao == null) {
+            return false;
+        }
+
+        return possuiTexto(
+                personalizacao.getLegenda()
+        )
+                || possuiTexto(
+                        personalizacao
+                                .getCorFundo()
+                )
+                || possuiTexto(
+                        personalizacao
+                                .getCorFundoLegenda()
+                )
+                || possuiTexto(
+                        personalizacao
+                                .getCorLegenda()
+                )
+                || personalizacao
+                        .getExibirLegenda()
+                        != null
+                || personalizacao
+                        .getTamanhoBotao()
+                        != null
+                || personalizacao
+                        .getOculto()
+                        != null
+                || possuiTexto(
                         personalizacao.getFoto()
                 )
                 || possuiTexto(
                         personalizacao
                                 .getAudioPersonalizado()
-                ));
+                );
     }
 
-    private boolean possuiTexto(String valor) {
-        return valor != null && !valor.isBlank();
+    private String resolverTexto(
+            String valorPersonalizado,
+            String valorPadrao) {
+
+        if (possuiTexto(
+                valorPersonalizado
+        )) {
+            return valorPersonalizado;
+        }
+
+        return valorPadrao;
+    }
+
+    private boolean possuiTexto(
+            String valor) {
+
+        return valor != null
+                && !valor.isBlank();
     }
 
     private void validarDisponibilidadeDoBotao(
@@ -247,54 +435,15 @@ public class ServiceBotaoResolvido {
             return;
         }
 
-        if (!botao.getUsuario()
+        if (!botao
+                .getUsuario()
                 .getIdUsuario()
                 .equals(idUsuario)) {
 
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN,
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
                     "Este botão não pertence ao comunicador do usuário."
             );
         }
-    }
-
-    @Transactional(readOnly = true)
-    public BotaoResolvidoDTO pesquisarBotaoResolvidoParaUso(
-            Long idUsuario,
-            Long idBotao) {
-
-        entityUsuario usuario
-                = usuarioService.pesquisarUsuarioPorId(
-                        idUsuario
-                );
-
-        entityBotao botao = repositoryBotao
-                .findById(idBotao)
-                .orElseThrow(()
-                        -> new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Botão não encontrado: "
-                                + idBotao
-                        )
-                );
-
-        validarDisponibilidadeDoBotao(
-                botao,
-                idUsuario
-        );
-
-        entityBotaoPersonalizacao personalizacao
-                = repositoryPersonalizacao
-                        .findByUsuarioIdUsuarioAndBotaoIdBotao(
-                                idUsuario,
-                                idBotao
-                        )
-                        .orElse(null);
-
-        return resolverBotao(
-                botao,
-                usuario,
-                personalizacao
-        );
     }
 }

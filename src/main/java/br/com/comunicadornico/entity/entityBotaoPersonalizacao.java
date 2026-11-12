@@ -16,42 +16,141 @@ import jakarta.persistence.UniqueConstraint;
 @Table(
         name = "tb_botao_personalizacao",
         uniqueConstraints = {
-            @UniqueConstraint(
-                    name = "uk_usuario_botao_personalizacao",
-                    columnNames = {"fk_usuario", "fk_botao"}
-            )
+                @UniqueConstraint(
+                        name = "uk_usuario_botao_personalizacao",
+                        columnNames = {
+                                "fk_usuario",
+                                "fk_botao"
+                        }
+                )
         }
 )
 @Schema(
-        description = "Personalização de um botão do comunicador de um usuário, configurada pelo administrador"
+        description = "Personalização de um botão do comunicador para um usuário"
 )
 public class entityBotaoPersonalizacao {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
     private Long idBotaoPersonalizacao;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "fk_usuario", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "fk_usuario",
+            nullable = false
+    )
     @Schema(hidden = true)
     private entityUsuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "fk_botao", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "fk_botao",
+            nullable = false
+    )
     @Schema(hidden = true)
     private entityBotao botao;
 
-    @Column(name = "foto", length = 2048)
-    @Schema(description = "URL da foto personalizada armazenada no Cloudinary")
+    @Column(
+            name = "legenda",
+            length = 255
+    )
+    @Schema(
+            description = "Legenda personalizada do botão"
+    )
+    private String legenda;
+
+    @Column(
+            name = "cor_fundo",
+            length = 7
+    )
+    @Schema(
+            description = "Cor personalizada do fundo do botão",
+            example = "#FFFFFF"
+    )
+    private String corFundo;
+
+    @Column(
+            name = "cor_fundo_legenda",
+            length = 7
+    )
+    @Schema(
+            description = "Cor personalizada do fundo da legenda",
+            example = "#B3B4B7"
+    )
+    private String corFundoLegenda;
+
+    @Column(
+            name = "cor_legenda",
+            length = 7
+    )
+    @Schema(
+            description = "Cor personalizada do texto da legenda",
+            example = "#000000"
+    )
+    private String corLegenda;
+
+    @Column(
+            name = "exibir_legenda"
+    )
+    @Schema(
+            description = "Define se a legenda deve ser exibida"
+    )
+    private Boolean exibirLegenda;
+
+    @Column(
+            name = "tamanho_botao"
+    )
+    @Schema(
+            description = "Tamanho personalizado do botão"
+    )
+    private Integer tamanhoBotao;
+
+    @Column(
+            name = "oculto"
+    )
+    @Schema(
+            description = "Define se o botão está oculto para o usuário"
+    )
+    private Boolean oculto;
+
+    @Column(
+            name = "foto",
+            length = 2048
+    )
+    @Schema(
+            description = "URL da foto personalizada armazenada no Cloudinary"
+    )
     private String foto;
 
-    @Column(name = "foto_public_id", length = 500)
+    @Column(
+            name = "foto_public_id",
+            length = 500
+    )
+    @Schema(hidden = true)
     private String fotoPublicId;
 
-    @Column(name = "audio_personalizado", length = 2048)
+    @Column(
+            name = "audio_personalizado",
+            length = 2048
+    )
+    @Schema(
+            description = "URL do áudio personalizado armazenado no Cloudinary"
+    )
     private String audioPersonalizado;
 
-    @Column(name = "audio_public_id", length = 500)
+    @Column(
+            name = "audio_public_id",
+            length = 500
+    )
+    @Schema(hidden = true)
     private String audioPublicId;
 
     public entityBotaoPersonalizacao() {
@@ -79,14 +178,18 @@ public class entityBotaoPersonalizacao {
 
     public void setIdBotaoPersonalizacao(
             Long idBotaoPersonalizacao) {
-        this.idBotaoPersonalizacao = idBotaoPersonalizacao;
+
+        this.idBotaoPersonalizacao =
+                idBotaoPersonalizacao;
     }
 
     public entityUsuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(entityUsuario usuario) {
+    public void setUsuario(
+            entityUsuario usuario) {
+
         this.usuario = usuario;
     }
 
@@ -94,15 +197,92 @@ public class entityBotaoPersonalizacao {
         return botao;
     }
 
-    public void setBotao(entityBotao botao) {
+    public void setBotao(
+            entityBotao botao) {
+
         this.botao = botao;
+    }
+
+    public String getLegenda() {
+        return legenda;
+    }
+
+    public void setLegenda(
+            String legenda) {
+
+        this.legenda = legenda;
+    }
+
+    public String getCorFundo() {
+        return corFundo;
+    }
+
+    public void setCorFundo(
+            String corFundo) {
+
+        this.corFundo = corFundo;
+    }
+
+    public String getCorFundoLegenda() {
+        return corFundoLegenda;
+    }
+
+    public void setCorFundoLegenda(
+            String corFundoLegenda) {
+
+        this.corFundoLegenda =
+                corFundoLegenda;
+    }
+
+    public String getCorLegenda() {
+        return corLegenda;
+    }
+
+    public void setCorLegenda(
+            String corLegenda) {
+
+        this.corLegenda = corLegenda;
+    }
+
+    public Boolean getExibirLegenda() {
+        return exibirLegenda;
+    }
+
+    public void setExibirLegenda(
+            Boolean exibirLegenda) {
+
+        this.exibirLegenda =
+                exibirLegenda;
+    }
+
+    public Integer getTamanhoBotao() {
+        return tamanhoBotao;
+    }
+
+    public void setTamanhoBotao(
+            Integer tamanhoBotao) {
+
+        this.tamanhoBotao =
+                tamanhoBotao;
+    }
+
+    public Boolean getOculto() {
+        return oculto;
+    }
+
+    public void setOculto(
+            Boolean oculto) {
+
+        this.oculto = oculto;
     }
 
     public String getFoto() {
         return foto;
     }
 
-    public void setFoto(String foto) {
+    public void setFoto(
+            String foto) {
+
         this.foto = foto;
     }
 
@@ -110,8 +290,11 @@ public class entityBotaoPersonalizacao {
         return fotoPublicId;
     }
 
-    public void setFotoPublicId(String fotoPublicId) {
-        this.fotoPublicId = fotoPublicId;
+    public void setFotoPublicId(
+            String fotoPublicId) {
+
+        this.fotoPublicId =
+                fotoPublicId;
     }
 
     public String getAudioPersonalizado() {
@@ -120,14 +303,19 @@ public class entityBotaoPersonalizacao {
 
     public void setAudioPersonalizado(
             String audioPersonalizado) {
-        this.audioPersonalizado = audioPersonalizado;
+
+        this.audioPersonalizado =
+                audioPersonalizado;
     }
 
     public String getAudioPublicId() {
         return audioPublicId;
     }
 
-    public void setAudioPublicId(String audioPublicId) {
-        this.audioPublicId = audioPublicId;
+    public void setAudioPublicId(
+            String audioPublicId) {
+
+        this.audioPublicId =
+                audioPublicId;
     }
 }
