@@ -10,7 +10,9 @@ import br.com.comunicadornico.entity.entityBotaoPersonalizacao;
 
 @Repository
 public interface repositoryBotaoPersonalizacao
-        extends JpaRepository<entityBotaoPersonalizacao, Long> {
+        extends JpaRepository<
+                entityBotaoPersonalizacao,
+                Long> {
 
     Optional<entityBotaoPersonalizacao>
             findByUsuarioIdUsuarioAndBotaoIdBotao(
@@ -19,15 +21,28 @@ public interface repositoryBotaoPersonalizacao
             );
 
     List<entityBotaoPersonalizacao>
-            findByUsuarioIdUsuario(Long idUsuario);
+            findByUsuarioIdUsuario(
+                    Long idUsuario
+            );
 
-    boolean existsByUsuarioIdUsuarioAndBotaoIdBotao(
-            Long idUsuario,
-            Long idBotao
-    );
+    List<entityBotaoPersonalizacao>
+            findByBotaoIdBotao(
+                    Long idBotao
+            );
 
-    void deleteByUsuarioIdUsuarioAndBotaoIdBotao(
-            Long idUsuario,
+    boolean
+            existsByUsuarioIdUsuarioAndBotaoIdBotao(
+                    Long idUsuario,
+                    Long idBotao
+            );
+
+    void
+            deleteByUsuarioIdUsuarioAndBotaoIdBotao(
+                    Long idUsuario,
+                    Long idBotao
+            );
+
+    void deleteByBotaoIdBotao(
             Long idBotao
     );
 }

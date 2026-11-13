@@ -10,7 +10,9 @@ import br.com.comunicadornico.entity.entityCategoriaPersonalizacao;
 
 @Repository
 public interface repositoryCategoriaPersonalizacao
-        extends JpaRepository<entityCategoriaPersonalizacao, Long> {
+        extends JpaRepository<
+                entityCategoriaPersonalizacao,
+                Long> {
 
     Optional<entityCategoriaPersonalizacao>
             findByUsuarioIdUsuarioAndCategoriaIdCategoria(
@@ -19,15 +21,28 @@ public interface repositoryCategoriaPersonalizacao
             );
 
     List<entityCategoriaPersonalizacao>
-            findByUsuarioIdUsuario(Long idUsuario);
+            findByUsuarioIdUsuario(
+                    Long idUsuario
+            );
 
-    boolean existsByUsuarioIdUsuarioAndCategoriaIdCategoria(
-            Long idUsuario,
-            Long idCategoria
-    );
+    List<entityCategoriaPersonalizacao>
+            findByCategoriaIdCategoria(
+                    Long idCategoria
+            );
 
-    void deleteByUsuarioIdUsuarioAndCategoriaIdCategoria(
-            Long idUsuario,
+    boolean
+            existsByUsuarioIdUsuarioAndCategoriaIdCategoria(
+                    Long idUsuario,
+                    Long idCategoria
+            );
+
+    void
+            deleteByUsuarioIdUsuarioAndCategoriaIdCategoria(
+                    Long idUsuario,
+                    Long idCategoria
+            );
+
+    void deleteByCategoriaIdCategoria(
             Long idCategoria
     );
 }

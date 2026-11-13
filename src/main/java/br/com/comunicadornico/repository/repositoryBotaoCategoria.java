@@ -10,11 +10,18 @@ import org.springframework.data.repository.query.Param;
 import br.com.comunicadornico.entity.entityBotaoCategoria;
 
 public interface repositoryBotaoCategoria
-        extends JpaRepository<entityBotaoCategoria, Long> {
+        extends JpaRepository<
+                entityBotaoCategoria,
+                Long> {
 
     List<entityBotaoCategoria>
             findByCategoriaIdCategoriaOrderByPosicaoAsc(
                     Long idCategoria
+            );
+
+    List<entityBotaoCategoria>
+            findByBotaoIdBotao(
+                    Long idBotao
             );
 
     Optional<entityBotaoCategoria>
@@ -23,15 +30,28 @@ public interface repositoryBotaoCategoria
                     Long idCategoria
             );
 
-    boolean existsByBotaoIdBotaoAndCategoriaIdCategoria(
-            Long idBotao,
+    boolean
+            existsByBotaoIdBotaoAndCategoriaIdCategoria(
+                    Long idBotao,
+                    Long idCategoria
+            );
+
+    void deleteByBotaoIdBotao(
+            Long idBotao
+    );
+
+    void deleteByCategoriaIdCategoria(
             Long idCategoria
     );
 
     @Query("""
-            SELECT COALESCE(MAX(relacao.posicao), 0)
+            SELECT COALESCE(
+                MAX(relacao.posicao),
+                0
+            )
             FROM entityBotaoCategoria relacao
-            WHERE relacao.categoria.idCategoria = :idCategoria
+            WHERE relacao.categoria.idCategoria =
+                  :idCategoria
             """)
     int buscarMaiorPosicaoDaCategoria(
             @Param("idCategoria")
