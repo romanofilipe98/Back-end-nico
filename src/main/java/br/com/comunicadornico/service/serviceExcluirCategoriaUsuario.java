@@ -7,6 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.com.comunicadornico.dto.ExcluirRegistroUsuarioResponseDTO;
 import br.com.comunicadornico.entity.entityCategoria;
+import br.com.comunicadornico.entity.entityCategoriaPersonalizacao;
 import br.com.comunicadornico.entity.entityUsuario;
 import br.com.comunicadornico.repository.repositoryBotaoCategoria;
 import br.com.comunicadornico.repository.repositoryCategoria;
@@ -81,18 +82,114 @@ public class serviceExcluirCategoriaUsuario {
                         );
 
         boolean categoriaPadrao =
-                categoria.getUsuario()
-                        == null
+                categoria.getUsuario() == null
                         && categoria
                                 .getAdministrador()
                                 == null;
 
         if (categoriaPadrao) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Categorias padrão não podem ser excluídas."
+            return ocultarCategoriaPadrao(
+                    categoria,
+                    usuario
             );
         }
+
+        validarPropriedade(
+                categoria,
+                usuario
+        );
+
+        return excluirCategoriaPersonalizada(
+                categoria
+        );
+    }
+
+    private ExcluirRegistroUsuarioResponseDTO
+            ocultarCategoriaPadrao(
+                    entityCategoria categoria,
+                    entityUsuario usuario) {
+
+        entityCategoriaPersonalizacao
+                personalizacao =
+                repositoryPersonalizacao
+                        .findByUsuarioIdUsuarioAndCategoriaIdCategoria(
+                                usuario.getIdUsuario(),
+                                categoria.getIdCategoria()
+                        )
+                        .orElseGet(() -> {
+                            entityCategoriaPersonalizacao nova =
+                                    new entityCategoriaPersonalizacao();
+
+                            nova.setUsuario(
+                                    usuario
+                            );
+
+                            nova.setCategoria(
+                                    categoria
+                            );
+
+                            return nova;
+                        });
+
+        personalizacao.setOculto(
+                true
+        );
+
+        repositoryPersonalizacao
+                .saveAndFlush(
+                        personalizacao
+                );
+
+        return new ExcluirRegistroUsuarioResponseDTO(
+                categoria.getIdCategoria(),
+                "CATEGORIA",
+                "OCULTADA",
+                "Categoria padrão removida do comunicador do usuário."
+        );
+    }
+
+    private ExcluirRegistroUsuarioResponseDTO
+            excluirCategoriaPersonalizada(
+                    entityCategoria categoria) {
+
+        Long idCategoria =
+                categoria.getIdCategoria();
+
+        String fotoPublicId =
+                categoria
+                        .getFotoCatPublicId();
+
+        repositoryBotaoCategoria
+                .deleteByCategoriaIdCategoria(
+                        idCategoria
+                );
+
+        repositoryPersonalizacao
+                .deleteByCategoriaIdCategoria(
+                        idCategoria
+                );
+
+        repositoryCategoria.delete(
+                categoria
+        );
+
+        repositoryCategoria.flush();
+
+        excluirImagem(
+                fotoPublicId
+        );
+
+        return new ExcluirRegistroUsuarioResponseDTO(
+                idCategoria,
+                "CATEGORIA",
+                "EXCLUIDA",
+                "Categoria personalizada excluída permanentemente."
+        );
+    }
+
+    private void validarPropriedade(
+            entityCategoria categoria,
+            entityUsuario usuario) {
 
         if (categoria.getUsuario() == null
                 || !categoria
@@ -107,40 +204,6 @@ public class serviceExcluirCategoriaUsuario {
                     "Esta categoria não pertence ao usuário selecionado."
             );
         }
-
-        Long idCategoriaExcluida =
-                categoria.getIdCategoria();
-
-        String fotoPublicId =
-                categoria
-                        .getFotoCatPublicId();
-
-        repositoryBotaoCategoria
-                .deleteByCategoriaIdCategoria(
-                        idCategoriaExcluida
-                );
-
-        repositoryPersonalizacao
-                .deleteByCategoriaIdCategoria(
-                        idCategoriaExcluida
-                );
-
-        repositoryCategoria.delete(
-                categoria
-        );
-
-        repositoryCategoria.flush();
-
-        excluirImagem(
-                fotoPublicId
-        );
-
-        return new ExcluirRegistroUsuarioResponseDTO(
-                idCategoriaExcluida,
-                "CATEGORIA",
-                "EXCLUIDA",
-                "Categoria personalizada excluída permanentemente."
-        );
     }
 
     private void excluirImagem(
