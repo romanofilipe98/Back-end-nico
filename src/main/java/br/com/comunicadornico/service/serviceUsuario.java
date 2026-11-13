@@ -113,6 +113,7 @@ public class serviceUsuario {
         usuario.setNivelAutismo(usuarioAtualizado.getNivelAutismo());
         usuario.setDataNascAut(usuarioAtualizado.getDataNascAut());
         usuario.setVoz(usuarioAtualizado.isVoz());
+        usuario.setBiografia(usuarioAtualizado.getBiografia());
 
         return repositoryUsuario.save(usuario);
     }

@@ -50,6 +50,10 @@ public class entityUsuario {
     @Column(name= "voz")
     @Schema(description = "Tipo de voz do sintetizador true(Masculino) false(Feminino)", example = "true")
     private boolean voz;
+
+    @Column(name= "biografia", columnDefinition = "TEXT")
+    @Schema(description = "Observações ou biografia do usuário", example = "Gosta de dinossauros e não gosta de barulho.")
+    private String biografia;
     
     // criando os relacionamentos da tabela
     // relacioamento bidirecional de usuárioxadministrador (*..1)
@@ -90,6 +94,7 @@ public class entityUsuario {
         this.nivelAutismo = nivelAutismo;
         this.dataNascAut = dataNascAut;
         this.voz = voz;
+        this.biografia = biografia;
     }
  
     public Long getIdUsuario() {
@@ -179,5 +184,13 @@ public class entityUsuario {
 
     public void setTiraDeSentenca(entityTiraDeSentenca tiraDeSentenca) {
         this.tiraDeSentenca = tiraDeSentenca;
+    }
+
+    public String getBiografia() {
+        return biografia;
+    }
+
+    public void setBiografia(String biografia) {
+        this.biografia = biografia;
     }
 }
