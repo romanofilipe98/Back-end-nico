@@ -22,25 +22,23 @@ public class ServiceBotaoResolvido {
 
     private final repositoryBotao repositoryBotao;
 
-    private final repositoryBotaoPersonalizacao
-            repositoryPersonalizacao;
+    private final repositoryBotaoPersonalizacao repositoryPersonalizacao;
 
     private final serviceUsuario usuarioService;
 
     public ServiceBotaoResolvido(
             repositoryBotao repositoryBotao,
-            repositoryBotaoPersonalizacao
-                    repositoryPersonalizacao,
+            repositoryBotaoPersonalizacao repositoryPersonalizacao,
             serviceUsuario usuarioService) {
 
-        this.repositoryBotao =
-                repositoryBotao;
+        this.repositoryBotao
+                = repositoryBotao;
 
-        this.repositoryPersonalizacao =
-                repositoryPersonalizacao;
+        this.repositoryPersonalizacao
+                = repositoryPersonalizacao;
 
-        this.usuarioService =
-                usuarioService;
+        this.usuarioService
+                = usuarioService;
     }
 
     @Transactional(readOnly = true)
@@ -49,40 +47,39 @@ public class ServiceBotaoResolvido {
                     Long idUsuario,
                     String emailAdministrador) {
 
-        entityUsuario usuario =
-                usuarioService
+        entityUsuario usuario
+                = usuarioService
                         .validarUsuarioDoAdministrador(
                                 idUsuario,
                                 emailAdministrador
                         );
 
-        List<entityBotao> botoes =
-                repositoryBotao
+        List<entityBotao> botoes
+                = repositoryBotao
                         .findBotoesDisponiveisParaUsuario(
                                 idUsuario
                         );
 
-        Map<Long, entityBotaoPersonalizacao>
-                personalizacaoPorBotao =
-                repositoryPersonalizacao
+        Map<Long, entityBotaoPersonalizacao> personalizacaoPorBotao
+                = repositoryPersonalizacao
                         .findByUsuarioIdUsuario(
                                 idUsuario
                         )
                         .stream()
                         .collect(
                                 Collectors.toMap(
-                                        personalizacao ->
-                                                personalizacao
-                                                        .getBotao()
-                                                        .getIdBotao(),
+                                        personalizacao
+                                        -> personalizacao
+                                                .getBotao()
+                                                .getIdBotao(),
                                         Function.identity()
                                 )
                         );
 
         return botoes
                 .stream()
-                .map(botao ->
-                        resolverBotao(
+                .map(botao
+                        -> resolverBotao(
                                 botao,
                                 usuario,
                                 personalizacaoPorBotao
@@ -101,21 +98,21 @@ public class ServiceBotaoResolvido {
                     Long idBotao,
                     String emailAdministrador) {
 
-        entityUsuario usuario =
-                usuarioService
+        entityUsuario usuario
+                = usuarioService
                         .validarUsuarioDoAdministrador(
                                 idUsuario,
                                 emailAdministrador
                         );
 
-        entityBotao botao =
-                repositoryBotao
+        entityBotao botao
+                = repositoryBotao
                         .findById(idBotao)
-                        .orElseThrow(() ->
-                                new ResponseStatusException(
+                        .orElseThrow(()
+                                -> new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
                                         "Botão não encontrado: "
-                                                + idBotao
+                                        + idBotao
                                 )
                         );
 
@@ -124,8 +121,8 @@ public class ServiceBotaoResolvido {
                 idUsuario
         );
 
-        entityBotaoPersonalizacao personalizacao =
-                repositoryPersonalizacao
+        entityBotaoPersonalizacao personalizacao
+                = repositoryPersonalizacao
                         .findByUsuarioIdUsuarioAndBotaoIdBotao(
                                 idUsuario,
                                 idBotao
@@ -145,20 +142,20 @@ public class ServiceBotaoResolvido {
                     Long idUsuario,
                     Long idBotao) {
 
-        entityUsuario usuario =
-                usuarioService
+        entityUsuario usuario
+                = usuarioService
                         .pesquisarUsuarioPorId(
                                 idUsuario
                         );
 
-        entityBotao botao =
-                repositoryBotao
+        entityBotao botao
+                = repositoryBotao
                         .findById(idBotao)
-                        .orElseThrow(() ->
-                                new ResponseStatusException(
+                        .orElseThrow(()
+                                -> new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
                                         "Botão não encontrado: "
-                                                + idBotao
+                                        + idBotao
                                 )
                         );
 
@@ -167,8 +164,8 @@ public class ServiceBotaoResolvido {
                 idUsuario
         );
 
-        entityBotaoPersonalizacao personalizacao =
-                repositoryPersonalizacao
+        entityBotaoPersonalizacao personalizacao
+                = repositoryPersonalizacao
                         .findByUsuarioIdUsuarioAndBotaoIdBotao(
                                 idUsuario,
                                 idBotao
@@ -185,11 +182,10 @@ public class ServiceBotaoResolvido {
     private BotaoResolvidoDTO resolverBotao(
             entityBotao botao,
             entityUsuario usuario,
-            entityBotaoPersonalizacao
-                    personalizacao) {
+            entityBotaoPersonalizacao personalizacao) {
 
-        String legendaResolvida =
-                resolverTexto(
+        String legendaResolvida
+                = resolverTexto(
                         personalizacao != null
                                 ? personalizacao
                                         .getLegenda()
@@ -197,8 +193,8 @@ public class ServiceBotaoResolvido {
                         botao.getLegenda()
                 );
 
-        String corFundoResolvida =
-                resolverTexto(
+        String corFundoResolvida
+                = resolverTexto(
                         personalizacao != null
                                 ? personalizacao
                                         .getCorFundo()
@@ -206,8 +202,8 @@ public class ServiceBotaoResolvido {
                         botao.getCorFundo()
                 );
 
-        String corFundoLegendaResolvida =
-                resolverTexto(
+        String corFundoLegendaResolvida
+                = resolverTexto(
                         personalizacao != null
                                 ? personalizacao
                                         .getCorFundoLegenda()
@@ -215,67 +211,70 @@ public class ServiceBotaoResolvido {
                         botao.getCorFundoLegenda()
                 );
 
-        String corLegendaResolvida =
-                resolverTexto(
+        String corLegendaResolvida
+                = resolverTexto(
                         personalizacao != null
                                 ? personalizacao
                                         .getCorLegenda()
                                 : null,
-                        botao.getCorLegenda()
+                        resolverTexto(
+                                botao.getCorLegenda(),
+                                "#000000"
+                        )
                 );
 
-        boolean exibirLegendaResolvida =
-                personalizacao != null
-                        && personalizacao
-                                .getExibirLegenda()
-                                != null
+        boolean exibirLegendaResolvida
+                = personalizacao != null
+                && personalizacao
+                        .getExibirLegenda()
+                != null
                         ? personalizacao
                                 .getExibirLegenda()
                         : botao.isExibirLegenda();
 
-        int tamanhoBotaoResolvido =
-                personalizacao != null
-                        && personalizacao
-                                .getTamanhoBotao()
-                                != null
+        int tamanhoBotaoResolvido
+                = personalizacao != null
+                && personalizacao
+                        .getTamanhoBotao()
+                != null
                         ? personalizacao
                                 .getTamanhoBotao()
                         : botao.getTamanhoBotao();
 
-        boolean ocultoResolvido =
-                personalizacao != null
-                        && personalizacao
-                                .getOculto()
-                                != null
+        boolean ocultoResolvido
+                = personalizacao != null
+                && personalizacao
+                        .getOculto()
+                != null
                         ? personalizacao
                                 .getOculto()
                         : botao.isOculto();
 
-        String fotoResolvida =
-                resolverFoto(
+        String fotoResolvida
+                = resolverFoto(
                         botao,
                         personalizacao
                 );
 
-        String audioResolvido =
-                resolverAudio(
+        String audioResolvido
+                = resolverAudio(
                         botao,
                         usuario,
                         personalizacao
                 );
 
-        boolean personalizado =
-                possuiPersonalizacao(
+        boolean personalizado
+                = possuiPersonalizacao(
                         personalizacao
                 );
 
-        boolean exclusivoUsuario =
-                botao.getUsuario() != null
-                        && botao.getUsuario()
-                                .getIdUsuario()
-                                .equals(
-                                        usuario.getIdUsuario()
-                                );
+        boolean exclusivoUsuario
+                = botao.getUsuario() != null
+                && botao.getUsuario()
+                        .getIdUsuario()
+                        .equals(
+                                usuario.getIdUsuario()
+                        );
 
         return new BotaoResolvidoDTO(
                 botao.getIdBotao(),
@@ -296,7 +295,7 @@ public class ServiceBotaoResolvido {
         );
     }
 
-private List<Long> resolverIdsCategorias(
+    private List<Long> resolverIdsCategorias(
             entityBotao botao) {
 
         if (botao.getBotaoCategorias() == null || botao.getBotaoCategorias().isEmpty()) {
@@ -306,19 +305,19 @@ private List<Long> resolverIdsCategorias(
         return botao
                 .getBotaoCategorias()
                 .stream()
-                .filter(relacao ->
-                        relacao != null && relacao.getCategoria() != null
+                .filter(relacao
+                        -> relacao != null && relacao.getCategoria() != null
                 )
-                .map(relacao ->
-                        relacao.getCategoria().getIdCategoria()
+                .map(relacao
+                        -> relacao.getCategoria().getIdCategoria()
                 )
                 .distinct()
                 .toList();
     }
+
     private String resolverFoto(
             entityBotao botao,
-            entityBotaoPersonalizacao
-                    personalizacao) {
+            entityBotaoPersonalizacao personalizacao) {
 
         if (personalizacao != null
                 && possuiTexto(
@@ -334,8 +333,7 @@ private List<Long> resolverIdsCategorias(
     private String resolverAudio(
             entityBotao botao,
             entityUsuario usuario,
-            entityBotaoPersonalizacao
-                    personalizacao) {
+            entityBotaoPersonalizacao personalizacao) {
 
         if (personalizacao != null
                 && possuiTexto(
@@ -362,8 +360,7 @@ private List<Long> resolverIdsCategorias(
     }
 
     private boolean possuiPersonalizacao(
-            entityBotaoPersonalizacao
-                    personalizacao) {
+            entityBotaoPersonalizacao personalizacao) {
 
         if (personalizacao == null) {
             return false;
@@ -386,13 +383,13 @@ private List<Long> resolverIdsCategorias(
                 )
                 || personalizacao
                         .getExibirLegenda()
-                        != null
+                != null
                 || personalizacao
                         .getTamanhoBotao()
-                        != null
+                != null
                 || personalizacao
                         .getOculto()
-                        != null
+                != null
                 || possuiTexto(
                         personalizacao.getFoto()
                 )
