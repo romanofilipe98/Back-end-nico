@@ -296,12 +296,10 @@ public class ServiceBotaoResolvido {
         );
     }
 
-    private List<Long> resolverIdsCategorias(
+private List<Long> resolverIdsCategorias(
             entityBotao botao) {
 
-        if (botao.getBotaoCategorias()
-                == null) {
-
+        if (botao.getBotaoCategorias() == null || botao.getBotaoCategorias().isEmpty()) {
             return List.of();
         }
 
@@ -309,17 +307,14 @@ public class ServiceBotaoResolvido {
                 .getBotaoCategorias()
                 .stream()
                 .filter(relacao ->
-                        relacao.getCategoria()
-                                != null
+                        relacao != null && relacao.getCategoria() != null
                 )
                 .map(relacao ->
-                        relacao.getCategoria()
-                                .getIdCategoria()
+                        relacao.getCategoria().getIdCategoria()
                 )
                 .distinct()
                 .toList();
     }
-
     private String resolverFoto(
             entityBotao botao,
             entityBotaoPersonalizacao
