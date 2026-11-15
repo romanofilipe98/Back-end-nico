@@ -17,6 +17,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 
 
 //criando tabela
@@ -34,10 +37,12 @@ public class entityAdministrador {
     //variaveis(colunas na tabela)
     @Column(name = "nome", nullable = false)
     @Schema(description = "Nome completo do administrador", example = "João da Silva")
+    @NotBlank 
     private String nome;
 
     @Column(name = "email", nullable = false, unique = true)
     @Schema(description = "Endereço de e-mail (deve ser único)", example = "joao.silva@email.com")
+    @Email
     private String email;
 
     @Column(name = "pin", nullable = false)
@@ -46,10 +51,12 @@ public class entityAdministrador {
 
     @Column(name = "telefone", nullable = false, unique = true)
     @Schema(description = "Telefone de contato com DDD", example = "11988887777")
+    @NotBlank 
     private String telefone;
 
     @Column(name = "dataNasc", nullable = false)
     @Schema(description = "Data de nascimento no padrão YYYY-MM-DD", example = "1990-05-15")
+    @Past 
     private LocalDate dataNasc;
 
     @Column(name = "sexo", nullable = false)
@@ -59,6 +66,7 @@ public class entityAdministrador {
     @Column(name = "senha", nullable = false)
     @Schema(description = "Senha de acesso (ficará criptografada no banco)", example = "SenhaForte123@", accessMode = Schema.AccessMode.WRITE_ONLY)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotBlank 
     private String senha;
 
     @Column(name = "premium")

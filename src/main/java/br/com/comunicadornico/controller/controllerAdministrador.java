@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.service.serviceAdministrador;
@@ -22,6 +24,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/administradores")
@@ -31,68 +34,77 @@ public class controllerAdministrador {
     @Autowired
     private serviceAdministrador meuService;
 
-    // 1- Criar Administrador (POST) - Rota Pública
+    // Autorização: um administrador só acessa/altera a PRÓPRIA conta
+    private entityAdministrador exigirProprioAdministrador(Long id, Authentication authentication) {
+        entityAdministrador alvo = meuService.pesquisarAdministradorPorId(id);
+        if (authentication == null || !alvo.getEmail().equalsIgnoreCase(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode acessar a sua própria conta.");
+        }
+        return alvo;
+    }
+
     @PostMapping
-    @Operation(summary = "Criar novo administrador", description = "Registra um administrador no banco de dados. A senha será criptografada automaticamente (Rota pública).")
+    @Operation(summary = "Criar novo administrador", description = "Registra um administrador. A senha é criptografada (Rota pública).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Administrador criado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados")
+        @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados"),
+        @ApiResponse(responseCode = "409", description = "E-mail ou telefone já cadastrado")
     })
-    public ResponseEntity<entityAdministrador> criarAdministrador(@RequestBody entityAdministrador novoAdministrador) {
-        entityAdministrador administradorCriado = meuService.criarAdministrador(novoAdministrador);
-        return ResponseEntity.status(HttpStatus.CREATED).body(administradorCriado);
+    public ResponseEntity<entityAdministrador> criarAdministrador(@Valid @RequestBody entityAdministrador novoAdministrador) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(meuService.criarAdministrador(novoAdministrador));
     }
 
-    // 2. READ Consultar todos os administradores - Rota Protegida
     @GetMapping
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Listar todos", description = "Retorna uma lista de todos os administradores cadastrados (Requer Token).")
+    @Operation(summary = "Listar administradores", description = "Retorna apenas a conta do administrador autenticado (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
-    public ResponseEntity<List<entityAdministrador>> listarTodosAdministradores() {
-        List<entityAdministrador> lista = meuService.listarAdministradores();
-        return ResponseEntity.status(HttpStatus.OK).body(lista);
+    public ResponseEntity<List<entityAdministrador>> listarTodosAdministradores(Authentication authentication) {
+        List<entityAdministrador> lista = meuService.listarAdministradores().stream()
+                .filter(a -> a.getEmail().equalsIgnoreCase(authentication.getName()))
+                .toList();
+        return ResponseEntity.ok(lista);
     }
 
-    // 3. READ - Consultar administrador pelo nome - Rota Protegida
     @GetMapping("/buscaradmnome")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Buscar por nome", description = "Pesquisa administradores que contenham o nome informado (Requer Token).")
+    @Operation(summary = "Buscar por nome", description = "Pesquisa dentro da conta autenticada (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso")
-    public ResponseEntity<List<entityAdministrador>> buscarPorNome(@RequestParam String nome) {
-        List<entityAdministrador> administradores = meuService.pesquisarAdministrador(nome);
-        return ResponseEntity.status(HttpStatus.OK).body(administradores);
+    public ResponseEntity<List<entityAdministrador>> buscarPorNome(@RequestParam String nome, Authentication authentication) {
+        List<entityAdministrador> lista = meuService.pesquisarAdministrador(nome).stream()
+                .filter(a -> a.getEmail().equalsIgnoreCase(authentication.getName()))
+                .toList();
+        return ResponseEntity.ok(lista);
     }
 
-    // 4. READ - Buscar por ID - Rota Protegida
     @GetMapping("/{idAdministrador}")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Buscar por ID", description = "Retorna os dados de um administrador específico pelo seu ID (Requer Token).")
+    @Operation(summary = "Buscar por ID", description = "Retorna o administrador autenticado (Requer Token).")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Administrador encontrado"),
+        @ApiResponse(responseCode = "403", description = "Conta de outro administrador"),
         @ApiResponse(responseCode = "404", description = "Administrador não encontrado")
     })
-    public ResponseEntity<entityAdministrador> buscarAdministradorPorId(@PathVariable Long idAdministrador) {
-        entityAdministrador administradorEncontrado = meuService.pesquisarAdministradorPorId(idAdministrador);
-        return ResponseEntity.ok(administradorEncontrado);
+    public ResponseEntity<entityAdministrador> buscarAdministradorPorId(@PathVariable Long idAdministrador, Authentication authentication) {
+        return ResponseEntity.ok(exigirProprioAdministrador(idAdministrador, authentication));
     }
 
-    // 5. UPDATE - Atualizar um registro existente (PUT) - Rota Protegida
     @PutMapping("/{idAdministrador}")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Atualizar administrador", description = "Atualiza os dados de um administrador existente pelo ID (Requer Token).")
+    @Operation(summary = "Atualizar administrador", description = "Atualiza a própria conta (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Administrador atualizado com sucesso")
-    public ResponseEntity<entityAdministrador> atualizarAdministrador(@PathVariable Long idAdministrador, @RequestBody entityAdministrador administradorAtualizado) {
-        entityAdministrador administrador = meuService.atualizarAdministrador(idAdministrador, administradorAtualizado);
-        return ResponseEntity.status(HttpStatus.OK).body(administrador);
+    public ResponseEntity<entityAdministrador> atualizarAdministrador(@PathVariable Long idAdministrador,
+            @RequestBody entityAdministrador administradorAtualizado, Authentication authentication) {
+        exigirProprioAdministrador(idAdministrador, authentication);
+        return ResponseEntity.ok(meuService.atualizarAdministrador(idAdministrador, administradorAtualizado));
     }
 
-    // 6. DELETE - Excluir um registro (DELETE) - Rota Protegida
     @DeleteMapping("/{idAdministrador}")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Excluir administrador", description = "Remove um administrador do banco de dados pelo ID (Requer Token).")
+    @Operation(summary = "Excluir administrador", description = "Remove a própria conta (Requer Token).")
     @ApiResponse(responseCode = "204", description = "Administrador excluído com sucesso")
-    public ResponseEntity<Void> excluirAdministrador(@PathVariable Long idAdministrador) {
+    public ResponseEntity<Void> excluirAdministrador(@PathVariable Long idAdministrador, Authentication authentication) {
+        exigirProprioAdministrador(idAdministrador, authentication);
         meuService.excluirAdministrador(idAdministrador);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.noContent().build();
     }
 }

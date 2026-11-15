@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import br.com.comunicadornico.repository.repositoryAdministrador;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,40 +25,47 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Autowired
     private repositoryAdministrador repository;
 
+    // Login e cadastro sao publicos: um token antigo/expirado no header nao pode bloquea-los
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.equals("/api/login")
+                || (uri.equals("/api/administradores") && "POST".equals(request.getMethod()));
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String token = recuperarToken(request);
 
         if (token != null) {
-            String email
-                    = jwtService.extrairEmailDoToken(token);
+            try {
+                String email = jwtService.extrairEmailDoToken(token);
+                var administrador = repository.findByEmail(email);
 
-            var administrador
-                    = repository.findByEmail(email)
-                            .orElseThrow(()
-                                    -> new RuntimeException(
-                                            "Administrador não encontrado."
-                                    )
-                            );
+                if (administrador.isEmpty()) {
+                    responder401(response);
+                    return;
+                }
 
-            var authentication
-                    = new UsernamePasswordAuthenticationToken(
-                            administrador.getEmail(),
-                            null,
-                            new ArrayList<>()
-                    );
-
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                administrador.get().getEmail(), null, new ArrayList<>()));
+            } catch (JwtException | IllegalArgumentException e) {
+                // token expirado, adulterado ou malformado -> 401 (antes causava 500)
+                responder401(response);
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void responder401(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"status\":401,\"message\":\"Token inválido ou expirado.\"}");
     }
 
     private String recuperarToken(HttpServletRequest request) {
