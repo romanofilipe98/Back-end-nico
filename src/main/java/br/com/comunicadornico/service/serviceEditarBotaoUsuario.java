@@ -159,18 +159,6 @@ public class serviceEditarBotaoUsuario {
                         copia.setAdministrador(
                                         administrador);
 
-                        copia.setAudioFem(
-                                        null);
-
-                        copia.setAudioFemPublicId(
-                                        null);
-
-                        copia.setAudioMas(
-                                        null);
-
-                        copia.setAudioMasPublicId(
-                                        null);
-
                         copiarMidiasDoBotaoPadrao(
                                         botaoOriginal,
                                         copia);
@@ -357,22 +345,26 @@ public class serviceEditarBotaoUsuario {
                 destino.setFoto(
                                 origem.getFoto());
 
-                /*
-                 * A cópia pode usar a mesma URL da imagem
-                 * padrão, mas não recebe o Public ID.
-                 *
-                 * Desse modo, excluir a cópia não remove
-                 * o arquivo usado pelo botão global.
-                 */
                 destino.setFotoPublicId(
+                                null);
+
+                destino.setAudioFem(
+                                origem.getAudioFem());
+
+                destino.setAudioFemPublicId(
+                                null);
+
+                destino.setAudioMas(
+                                origem.getAudioMas());
+
+                destino.setAudioMasPublicId(
                                 null);
 
                 destino.setAudioPersonalizado(
                                 origem.getAudioPersonalizado());
 
-                destino
-                                .setAudioPersonalizadoPublicId(
-                                                null);
+                destino.setAudioPersonalizadoPublicId(
+                                null);
         }
 
         private void associarCategoriaUnica(
@@ -384,34 +376,56 @@ public class serviceEditarBotaoUsuario {
                                                 botao.getBotaoCategorias())
                                 : new ArrayList<>();
 
-                if (!relacoesAtuais.isEmpty()) {
-                        repositoryBotaoCategoria
-                                        .deleteAll(
-                                                        relacoesAtuais);
+                entityBotaoCategoria relacaoMantida = relacoesAtuais
+                                .stream()
+                                .filter(relacao -> relacao.getCategoria() != null
+                                                && relacao
+                                                                .getCategoria()
+                                                                .getIdCategoria()
+                                                                .equals(
+                                                                                categoria.getIdCategoria()))
+                                .findFirst()
+                                .orElse(null);
 
-                        repositoryBotaoCategoria
-                                        .flush();
+                if (relacaoMantida != null) {
+                        List<entityBotaoCategoria> relacoesParaRemover = relacoesAtuais
+                                        .stream()
+                                        .filter(relacao -> !relacao
+                                                        .getIdBotaoCategoria()
+                                                        .equals(
+                                                                        relacaoMantida
+                                                                                        .getIdBotaoCategoria()))
+                                        .toList();
+
+                        if (!relacoesParaRemover.isEmpty()) {
+                                repositoryBotaoCategoria.deleteAll(
+                                                relacoesParaRemover);
+
+                                repositoryBotaoCategoria.flush();
+                        }
+
+                        return;
+                }
+
+                if (!relacoesAtuais.isEmpty()) {
+                        repositoryBotaoCategoria.deleteAll(
+                                        relacoesAtuais);
+
+                        repositoryBotaoCategoria.flush();
                 }
 
                 int maiorPosicao = repositoryBotaoCategoria
                                 .buscarMaiorPosicaoDaCategoria(
-                                                categoria
-                                                                .getIdCategoria());
+                                                categoria.getIdCategoria());
 
-                entityBotaoCategoria relacao = new entityBotaoCategoria();
+                entityBotaoCategoria novaRelacao = new entityBotaoCategoria();
 
-                relacao.setBotao(
-                                botao);
+                novaRelacao.setBotao(botao);
+                novaRelacao.setCategoria(categoria);
+                novaRelacao.setPosicao(maiorPosicao + 1);
 
-                relacao.setCategoria(
-                                categoria);
-
-                relacao.setPosicao(
-                                maiorPosicao + 1);
-
-                repositoryBotaoCategoria
-                                .saveAndFlush(
-                                                relacao);
+                repositoryBotaoCategoria.saveAndFlush(
+                                novaRelacao);
         }
 
         private void ocultarBotaoGlobalParaUsuario(
