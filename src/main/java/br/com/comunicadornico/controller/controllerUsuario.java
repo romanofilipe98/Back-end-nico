@@ -126,12 +126,15 @@ public class controllerUsuario {
 
         }
 
-        // 4. UPDATE - Atualizar um registro existente (PUT)
         @PutMapping("/{idUsuario}")
         @SecurityRequirement(name = "BearerAuth")
         @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário pertencente ao administrador autenticado.")
-        @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso")
-        public ResponseEntity<entityUsuario> atualizarUsuario(
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+                        @ApiResponse(responseCode = "403", description = "Usuário não pertence ao administrador autenticado"),
+                        @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+        })
+        public ResponseEntity<UsuarioResumoDTO> atualizarUsuario(
                         @PathVariable Long idUsuario,
                         @RequestBody entityUsuario usuarioAtualizado,
                         Authentication authentication) {
@@ -144,7 +147,16 @@ public class controllerUsuario {
                                 idUsuario,
                                 usuarioAtualizado);
 
-                return ResponseEntity.ok(usuario);
+                UsuarioResumoDTO resposta = new UsuarioResumoDTO(
+                                usuario.getIdUsuario(),
+                                usuario.getNome(),
+                                usuario.getSexo(),
+                                usuario.getNivelAutismo(),
+                                usuario.getDataNascAut(),
+                                usuario.isVoz(),
+                                usuario.getBiografia());
+
+                return ResponseEntity.ok(resposta);
         }
 
         // 5. DELETE - Excluir um registro (DELETE)
