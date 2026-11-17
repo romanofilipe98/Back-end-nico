@@ -124,12 +124,31 @@ public class controllerAdministrador {
 
     @PutMapping("/{idAdministrador}")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Atualizar administrador", description = "Atualiza a própria conta (Requer Token).")
+    @Operation(summary = "Atualizar administrador", description = "Atualiza a própria conta e retorna somente os dados do perfil.")
     @ApiResponse(responseCode = "200", description = "Administrador atualizado com sucesso")
-    public ResponseEntity<entityAdministrador> atualizarAdministrador(@PathVariable Long idAdministrador,
-            @RequestBody entityAdministrador administradorAtualizado, Authentication authentication) {
-        exigirProprioAdministrador(idAdministrador, authentication);
-        return ResponseEntity.ok(meuService.atualizarAdministrador(idAdministrador, administradorAtualizado));
+    public ResponseEntity<AdministradorPerfilDTO> atualizarAdministrador(
+            @PathVariable Long idAdministrador,
+            @RequestBody entityAdministrador administradorAtualizado,
+            Authentication authentication) {
+
+        exigirProprioAdministrador(
+                idAdministrador,
+                authentication);
+
+        entityAdministrador administrador = meuService.atualizarAdministrador(
+                idAdministrador,
+                administradorAtualizado);
+
+        AdministradorPerfilDTO resposta = new AdministradorPerfilDTO(
+                administrador.getIdAdministrador(),
+                administrador.getNome(),
+                administrador.getEmail(),
+                administrador.getPin(),
+                administrador.getTelefone(),
+                administrador.getDataNasc(),
+                administrador.getSexo());
+
+        return ResponseEntity.ok(resposta);
     }
 
     @DeleteMapping("/{idAdministrador}")
