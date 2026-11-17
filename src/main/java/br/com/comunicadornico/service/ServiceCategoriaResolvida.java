@@ -20,301 +20,237 @@ import br.com.comunicadornico.repository.repositoryCategoriaPersonalizacao;
 @Service
 public class ServiceCategoriaResolvida {
 
-    private final repositoryCategoria
-            repositoryCategoria;
+        private final repositoryCategoria repositoryCategoria;
 
-    private final repositoryCategoriaPersonalizacao
-            repositoryPersonalizacao;
+        private final repositoryCategoriaPersonalizacao repositoryPersonalizacao;
 
-    private final serviceUsuario
-            usuarioService;
+        private final serviceUsuario usuarioService;
 
-    public ServiceCategoriaResolvida(
-            repositoryCategoria repositoryCategoria,
-            repositoryCategoriaPersonalizacao
-                    repositoryPersonalizacao,
-            serviceUsuario usuarioService) {
+        public ServiceCategoriaResolvida(
+                        repositoryCategoria repositoryCategoria,
+                        repositoryCategoriaPersonalizacao repositoryPersonalizacao,
+                        serviceUsuario usuarioService) {
 
-        this.repositoryCategoria =
-                repositoryCategoria;
+                this.repositoryCategoria = repositoryCategoria;
 
-        this.repositoryPersonalizacao =
-                repositoryPersonalizacao;
+                this.repositoryPersonalizacao = repositoryPersonalizacao;
 
-        this.usuarioService =
-                usuarioService;
-    }
+                this.usuarioService = usuarioService;
+        }
 
-    @Transactional(readOnly = true)
-    public List<CategoriaResolvidaDTO>
-            listarCategoriasResolvidas(
-                    Long idUsuario,
-                    String emailAdministrador) {
+        @Transactional(readOnly = true)
+        public List<CategoriaResolvidaDTO> listarCategoriasResolvidas(
+                        Long idUsuario,
+                        String emailAdministrador) {
 
-        usuarioService
-                .validarUsuarioDoAdministrador(
-                        idUsuario,
-                        emailAdministrador
-                );
+                usuarioService
+                                .validarUsuarioDoAdministrador(
+                                                idUsuario,
+                                                emailAdministrador);
 
-        List<entityCategoria> categorias =
-                repositoryCategoria
-                        .findCategoriasDisponiveisParaUsuario(
-                                idUsuario
-                        );
+                List<entityCategoria> categorias = repositoryCategoria
+                                .findCategoriasDisponiveisParaUsuario(
+                                                idUsuario);
+                Map<Long, entityCategoriaPersonalizacao> personalizacaoPorCategoria = repositoryPersonalizacao
+                                .findByUsuarioIdUsuario(idUsuario)
+                                .stream()
+                                .filter(personalizacao -> personalizacao != null
+                                                && personalizacao.getCategoria() != null
+                                                && personalizacao.getCategoria().getIdCategoria() != null)
+                                .collect(
+                                                Collectors.toMap(
+                                                                personalizacao -> personalizacao
+                                                                                .getCategoria()
+                                                                                .getIdCategoria(),
+                                                                Function.identity(),
+                                                                (personalizacaoExistente,
+                                                                                personalizacaoDuplicada) -> personalizacaoDuplicada));
 
-        Map<Long, entityCategoriaPersonalizacao>
-                personalizacaoPorCategoria =
-                repositoryPersonalizacao
-                        .findByUsuarioIdUsuario(
-                                idUsuario
-                        )
-                        .stream()
-                        .collect(
-                                Collectors.toMap(
-                                        personalizacao ->
-                                                personalizacao
-                                                        .getCategoria()
-                                                        .getIdCategoria(),
-                                        Function.identity()
-                                )
-                        );
+                return categorias
+                                .stream()
+                                .map(categoria -> resolverCategoria(
+                                                categoria,
+                                                personalizacaoPorCategoria
+                                                                .get(
+                                                                                categoria
+                                                                                                .getIdCategoria()),
+                                                idUsuario))
+                                .sorted(
+                                                (
+                                                                primeira,
+                                                                segunda) -> Integer.compare(
+                                                                                primeira.posicao(),
+                                                                                segunda.posicao()))
+                                .toList();
+        }
 
-        return categorias
-                .stream()
-                .map(categoria ->
-                        resolverCategoria(
+        @Transactional(readOnly = true)
+        public CategoriaResolvidaDTO pesquisarCategoriaResolvida(
+                        Long idUsuario,
+                        Long idCategoria,
+                        String emailAdministrador) {
+
+                usuarioService
+                                .validarUsuarioDoAdministrador(
+                                                idUsuario,
+                                                emailAdministrador);
+
+                entityCategoria categoria = repositoryCategoria
+                                .findById(idCategoria)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "Categoria não encontrada: "
+                                                                + idCategoria));
+
+                validarDisponibilidadeDaCategoria(
                                 categoria,
-                                personalizacaoPorCategoria
-                                        .get(
-                                                categoria
-                                                        .getIdCategoria()
-                                        ),
-                                idUsuario
-                        )
-                )
-                .sorted(
-                        (
-                                primeira,
-                                segunda
-                        ) -> Integer.compare(
-                                primeira.posicao(),
-                                segunda.posicao()
-                        )
-                )
-                .toList();
-    }
+                                idUsuario);
 
-    @Transactional(readOnly = true)
-    public CategoriaResolvidaDTO
-            pesquisarCategoriaResolvida(
-                    Long idUsuario,
-                    Long idCategoria,
-                    String emailAdministrador) {
+                entityCategoriaPersonalizacao personalizacao = repositoryPersonalizacao
+                                .findByUsuarioIdUsuarioAndCategoriaIdCategoria(
+                                                idUsuario,
+                                                idCategoria)
+                                .orElse(null);
 
-        usuarioService
-                .validarUsuarioDoAdministrador(
-                        idUsuario,
-                        emailAdministrador
-                );
+                return resolverCategoria(
+                                categoria,
+                                personalizacao,
+                                idUsuario);
+        }
 
-        entityCategoria categoria =
-                repositoryCategoria
-                        .findById(idCategoria)
-                        .orElseThrow(() ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Categoria não encontrada: "
-                                                + idCategoria
-                                )
-                        );
+        private CategoriaResolvidaDTO resolverCategoria(
+                        entityCategoria categoria,
+                        entityCategoriaPersonalizacao personalizacao,
+                        Long idUsuario) {
 
-        validarDisponibilidadeDaCategoria(
-                categoria,
-                idUsuario
-        );
+                String nomeResolvido = resolverTexto(
+                                personalizacao != null
+                                                ? personalizacao
+                                                                .getNome()
+                                                : null,
+                                categoria.getNome());
 
-        entityCategoriaPersonalizacao
-                personalizacao =
-                repositoryPersonalizacao
-                        .findByUsuarioIdUsuarioAndCategoriaIdCategoria(
-                                idUsuario,
-                                idCategoria
-                        )
-                        .orElse(null);
+                String fotoResolvida = resolverTexto(
+                                personalizacao != null
+                                                ? personalizacao
+                                                                .getFoto()
+                                                : null,
+                                categoria.getFotoCat());
 
-        return resolverCategoria(
-                categoria,
-                personalizacao,
-                idUsuario
-        );
-    }
+                boolean ocultoResolvido = personalizacao != null
+                                && personalizacao
+                                                .getOculto() != null
+                                                                ? personalizacao
+                                                                                .getOculto()
+                                                                : false;
 
-    private CategoriaResolvidaDTO
-            resolverCategoria(
-                    entityCategoria categoria,
-                    entityCategoriaPersonalizacao
-                            personalizacao,
-                    Long idUsuario) {
+                boolean personalizada = possuiPersonalizacao(
+                                personalizacao);
 
-        String nomeResolvido =
-                resolverTexto(
-                        personalizacao != null
-                                ? personalizacao
-                                        .getNome()
-                                : null,
-                        categoria.getNome()
-                );
+                boolean exclusivaUsuario = categoria.getUsuario() != null
+                                && categoria
+                                                .getUsuario()
+                                                .getIdUsuario()
+                                                .equals(idUsuario);
 
-        String fotoResolvida =
-                resolverTexto(
-                        personalizacao != null
-                                ? personalizacao
-                                        .getFoto()
-                                : null,
-                        categoria.getFotoCat()
-                );
+                List<BotaoCategoriaOrdemDTO> botoesOrdenados = resolverBotoesOrdenados(
+                                categoria);
 
-        boolean ocultoResolvido =
-                personalizacao != null
-                        && personalizacao
-                                .getOculto()
-                                != null
-                        ? personalizacao
-                                .getOculto()
-                        : false;
+                return new CategoriaResolvidaDTO(
+                                categoria.getIdCategoria(),
+                                nomeResolvido,
+                                fotoResolvida,
+                                categoria.getPosicaoCat(),
+                                ocultoResolvido,
+                                personalizada,
+                                exclusivaUsuario,
+                                botoesOrdenados);
+        }
 
-        boolean personalizada =
-                possuiPersonalizacao(
-                        personalizacao
-                );
+        private List<BotaoCategoriaOrdemDTO> resolverBotoesOrdenados(
+                        entityCategoria categoria) {
 
-        boolean exclusivaUsuario =
-                categoria.getUsuario() != null
-                        && categoria
+                if (categoria.getBotaoCategorias() == null) {
+
+                        return List.of();
+                }
+
+                return categoria
+                                .getBotaoCategorias()
+                                .stream()
+                                .filter(relacao -> relacao.getBotao() != null)
+                                .sorted(
+                                                (
+                                                                primeira,
+                                                                segunda) -> Integer.compare(
+                                                                                primeira.getPosicao(),
+                                                                                segunda.getPosicao()))
+                                .map(relacao -> {
+                                        BotaoCategoriaOrdemDTO dto = new BotaoCategoriaOrdemDTO();
+
+                                        dto.setIdBotao(
+                                                        relacao
+                                                                        .getBotao()
+                                                                        .getIdBotao());
+
+                                        dto.setPosicao(
+                                                        relacao.getPosicao());
+
+                                        return dto;
+                                })
+                                .toList();
+        }
+
+        private boolean possuiPersonalizacao(
+                        entityCategoriaPersonalizacao personalizacao) {
+
+                if (personalizacao == null) {
+                        return false;
+                }
+
+                return possuiTexto(
+                                personalizacao.getNome())
+                                || possuiTexto(
+                                                personalizacao.getFoto())
+                                || personalizacao
+                                                .getOculto() != null;
+        }
+
+        private String resolverTexto(
+                        String valorPersonalizado,
+                        String valorPadrao) {
+
+                if (possuiTexto(
+                                valorPersonalizado)) {
+                        return valorPersonalizado;
+                }
+
+                return valorPadrao;
+        }
+
+        private void validarDisponibilidadeDaCategoria(
+                        entityCategoria categoria,
+                        Long idUsuario) {
+
+                if (categoria.getUsuario() == null) {
+                        return;
+                }
+
+                if (!categoria
                                 .getUsuario()
                                 .getIdUsuario()
-                                .equals(idUsuario);
+                                .equals(idUsuario)) {
 
-        List<BotaoCategoriaOrdemDTO>
-                botoesOrdenados =
-                resolverBotoesOrdenados(
-                        categoria
-                );
-
-        return new CategoriaResolvidaDTO(
-                categoria.getIdCategoria(),
-                nomeResolvido,
-                fotoResolvida,
-                categoria.getPosicaoCat(),
-                ocultoResolvido,
-                personalizada,
-                exclusivaUsuario,
-                botoesOrdenados
-        );
-    }
-
-    private List<BotaoCategoriaOrdemDTO>
-            resolverBotoesOrdenados(
-                    entityCategoria categoria) {
-
-        if (categoria.getBotaoCategorias()
-                == null) {
-
-            return List.of();
+                        throw new ResponseStatusException(
+                                        HttpStatus.FORBIDDEN,
+                                        "Esta categoria não pertence ao comunicador do usuário.");
+                }
         }
 
-        return categoria
-                .getBotaoCategorias()
-                .stream()
-                .filter(relacao ->
-                        relacao.getBotao()
-                                != null
-                )
-                .sorted(
-                        (
-                                primeira,
-                                segunda
-                        ) -> Integer.compare(
-                                primeira.getPosicao(),
-                                segunda.getPosicao()
-                        )
-                )
-                .map(relacao -> {
-                    BotaoCategoriaOrdemDTO dto =
-                            new BotaoCategoriaOrdemDTO();
+        private boolean possuiTexto(
+                        String valor) {
 
-                    dto.setIdBotao(
-                            relacao
-                                    .getBotao()
-                                    .getIdBotao()
-                    );
-
-                    dto.setPosicao(
-                            relacao.getPosicao()
-                    );
-
-                    return dto;
-                })
-                .toList();
-    }
-
-    private boolean possuiPersonalizacao(
-            entityCategoriaPersonalizacao
-                    personalizacao) {
-
-        if (personalizacao == null) {
-            return false;
+                return valor != null
+                                && !valor.isBlank();
         }
-
-        return possuiTexto(
-                personalizacao.getNome()
-        )
-                || possuiTexto(
-                        personalizacao.getFoto()
-                )
-                || personalizacao
-                        .getOculto()
-                        != null;
-    }
-
-    private String resolverTexto(
-            String valorPersonalizado,
-            String valorPadrao) {
-
-        if (possuiTexto(
-                valorPersonalizado
-        )) {
-            return valorPersonalizado;
-        }
-
-        return valorPadrao;
-    }
-
-    private void validarDisponibilidadeDaCategoria(
-            entityCategoria categoria,
-            Long idUsuario) {
-
-        if (categoria.getUsuario() == null) {
-            return;
-        }
-
-        if (!categoria
-                .getUsuario()
-                .getIdUsuario()
-                .equals(idUsuario)) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Esta categoria não pertence ao comunicador do usuário."
-            );
-        }
-    }
-
-    private boolean possuiTexto(
-            String valor) {
-
-        return valor != null
-                && !valor.isBlank();
-    }
 }
