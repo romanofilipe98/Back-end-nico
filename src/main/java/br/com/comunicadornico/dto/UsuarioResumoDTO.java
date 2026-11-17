@@ -8,6 +8,7 @@ public record UsuarioResumoDTO(
         String sexo,
         String nivelAutismo,
         LocalDate dataNascAut,
-        boolean voz
+        boolean voz,
+        String biografia
 ) {
 }
