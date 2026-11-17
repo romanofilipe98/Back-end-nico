@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.comunicadornico.dto.AdministradorPerfilDTO;
 import br.com.comunicadornico.entity.entityAdministrador;
 import br.com.comunicadornico.service.serviceAdministrador;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,11 +47,12 @@ public class controllerAdministrador {
     @PostMapping
     @Operation(summary = "Criar novo administrador", description = "Registra um administrador. A senha é criptografada (Rota pública).")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Administrador criado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados"),
-        @ApiResponse(responseCode = "409", description = "E-mail ou telefone já cadastrado")
+            @ApiResponse(responseCode = "201", description = "Administrador criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Erro na validação dos dados enviados"),
+            @ApiResponse(responseCode = "409", description = "E-mail ou telefone já cadastrado")
     })
-    public ResponseEntity<entityAdministrador> criarAdministrador(@Valid @RequestBody entityAdministrador novoAdministrador) {
+    public ResponseEntity<entityAdministrador> criarAdministrador(
+            @Valid @RequestBody entityAdministrador novoAdministrador) {
         return ResponseEntity.status(HttpStatus.CREATED).body(meuService.criarAdministrador(novoAdministrador));
     }
 
@@ -69,22 +71,54 @@ public class controllerAdministrador {
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Buscar por nome", description = "Pesquisa dentro da conta autenticada (Requer Token).")
     @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso")
-    public ResponseEntity<List<entityAdministrador>> buscarPorNome(@RequestParam String nome, Authentication authentication) {
+    public ResponseEntity<List<entityAdministrador>> buscarPorNome(@RequestParam String nome,
+            Authentication authentication) {
         List<entityAdministrador> lista = meuService.pesquisarAdministrador(nome).stream()
                 .filter(a -> a.getEmail().equalsIgnoreCase(authentication.getName()))
                 .toList();
         return ResponseEntity.ok(lista);
     }
 
+    @GetMapping("/me")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "Buscar perfil do administrador autenticado", description = "Retorna somente os dados necessários para edição do perfil.")
+    public ResponseEntity<AdministradorPerfilDTO> buscarPerfilAdministrador(
+            Authentication authentication) {
+
+        if (authentication == null
+                || authentication.getName() == null
+                || authentication.getName().isBlank()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Administrador não autenticado.");
+        }
+
+        entityAdministrador administrador = meuService.pesquisarAdministradorPorEmail(
+                authentication.getName());
+
+        AdministradorPerfilDTO resposta = new AdministradorPerfilDTO(
+                administrador.getIdAdministrador(),
+                administrador.getNome(),
+                administrador.getEmail(),
+                administrador.getPin(),
+                administrador.getTelefone(),
+                administrador.getDataNasc(),
+                administrador.getSexo());
+
+        return ResponseEntity.ok(resposta);
+    }
+
     @GetMapping("/{idAdministrador}")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Buscar por ID", description = "Retorna o administrador autenticado (Requer Token).")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Administrador encontrado"),
-        @ApiResponse(responseCode = "403", description = "Conta de outro administrador"),
-        @ApiResponse(responseCode = "404", description = "Administrador não encontrado")
+            @ApiResponse(responseCode = "200", description = "Administrador encontrado"),
+            @ApiResponse(responseCode = "403", description = "Conta de outro administrador"),
+            @ApiResponse(responseCode = "404", description = "Administrador não encontrado")
     })
-    public ResponseEntity<entityAdministrador> buscarAdministradorPorId(@PathVariable Long idAdministrador, Authentication authentication) {
+    public ResponseEntity<entityAdministrador> buscarAdministradorPorId(@PathVariable Long idAdministrador,
+            Authentication authentication) {
         return ResponseEntity.ok(exigirProprioAdministrador(idAdministrador, authentication));
     }
 
@@ -102,7 +136,8 @@ public class controllerAdministrador {
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Excluir administrador", description = "Remove a própria conta (Requer Token).")
     @ApiResponse(responseCode = "204", description = "Administrador excluído com sucesso")
-    public ResponseEntity<Void> excluirAdministrador(@PathVariable Long idAdministrador, Authentication authentication) {
+    public ResponseEntity<Void> excluirAdministrador(@PathVariable Long idAdministrador,
+            Authentication authentication) {
         exigirProprioAdministrador(idAdministrador, authentication);
         meuService.excluirAdministrador(idAdministrador);
         return ResponseEntity.noContent().build();

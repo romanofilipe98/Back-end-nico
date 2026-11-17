@@ -68,7 +68,8 @@ public class serviceAdministrador {
     }
 
     // UPDATE
-    public entityAdministrador atualizarAdministrador(Long idAdministrador, entityAdministrador administradorAtualizado) {
+    public entityAdministrador atualizarAdministrador(Long idAdministrador,
+            entityAdministrador administradorAtualizado) {
         entityAdministrador administrador = pesquisarAdministradorPorId(idAdministrador);
 
         administrador.setNome(administradorAtualizado.getNome());
@@ -94,5 +95,21 @@ public class serviceAdministrador {
     public void excluirAdministrador(Long idAdministrador) {
         entityAdministrador administrador = pesquisarAdministradorPorId(idAdministrador);
         repositoryAdministrador.delete(administrador);
+    }
+
+    public entityAdministrador pesquisarAdministradorPorEmail(
+            String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Administrador não autenticado.");
+        }
+
+        return repositoryAdministrador
+                .findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Administrador não encontrado para o e-mail autenticado."));
     }
 }
